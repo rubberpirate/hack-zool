@@ -1,12 +1,36 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
   import { app, saveRoom, notify } from '#lib/state.svelte.ts';
+  import { getBackendSummary } from '#lib/api.ts';
   import { remainingTotal, liveDemoClaims, daysLeft } from '#lib/model.ts';
   import Counter from '#lib/components/Counter.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import Action from '#lib/components/Action.svelte';
   import { enter } from '#lib/motion.ts';
+
   let closeDialog: HTMLDialogElement;
+  let livePollTimer: ReturnType<typeof setInterval> | null = null;
+
+  onMount(() => {
+    if (app.backendRoom?.id) {
+      const poll = async () => {
+        try {
+          const sum = await getBackendSummary(app.backendRoom!.id);
+          app.summary = sum;
+        } catch (e) {
+          console.warn('Could not poll room summary:', e);
+        }
+      };
+      void poll();
+      livePollTimer = setInterval(poll, 3000);
+    }
+  });
+
+  onDestroy(() => {
+    if (livePollTimer) clearInterval(livePollTimer);
+  });
+
   $effect(() => {
     if (!app.ready) return;
     if (!app.room.funded) {
@@ -18,10 +42,20 @@
       saveRoom();
     }
   });
-  const count = $derived(app.room.claimed.length);
-  const remaining = $derived(remainingTotal(app.room));
+
+  const count = $derived(
+    app.summary
+      ? app.summary.funded_confirmed_count + app.summary.pending_count
+      : app.room.claimed.length
+  );
+  const remaining = $derived(
+    app.summary
+      ? app.summary.spendable_zat / 100_000_000
+      : remainingTotal(app.room)
+  );
+
   $effect(() => {
-    if (app.ready && app.room.funded && app.room.id === 'demo' && !app.room.closed && count < 37) {
+    if (!app.backendRoom && app.ready && app.room.funded && app.room.id === 'demo' && !app.room.closed && count < 37) {
       const timer = setTimeout(() => {
         app.room.claimed = [...new Set([...app.room.claimed, ...liveDemoClaims])];
         app.room.gifts = [2, 7, 11, 16, 23, 30];
@@ -30,15 +64,16 @@
       return () => clearTimeout(timer);
     }
   });
+
   function closeRoom() {
     app.room.closed = true;
     saveRoom();
     closeDialog.close();
-    notify(`${remaining.toFixed(2)} ZEC refunded to your demo pool. Room closed.`);
+    notify(`${remaining.toFixed(4)} ZEC remaining in coordinator pool. Room closed.`);
   }
 </script>
 
-<svelte:head><title>{count} of {app.room.count} claimed — Z-Split</title></svelte:head>
+<svelte:head><title>{count} of {app.room.count} claimed — Zool</title></svelte:head>
 <main id="main" class="workspace live-page" use:enter>
   <div class="live-grid">
     <section>

@@ -32,7 +32,7 @@
 </script>
 
 <svelte:head
-  ><title>Z-Split — Pay the room. Collect nothing.</title><meta
+  ><title>Zool — Pay the room. Collect nothing.</title><meta
     name="description"
     content="Shielded ZEC payouts, hand-delivered. Pay a room with one-time claim links. No wallet lists. No spreadsheets."
   /><link

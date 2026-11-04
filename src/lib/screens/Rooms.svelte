@@ -17,7 +17,7 @@
   );
 </script>
 
-<svelte:head><title>Your room — Z-Split</title></svelte:head>
+<svelte:head><title>Your room — Zool</title></svelte:head>
 <main id="main" class="workspace rooms-page" use:enter>
   <div class="page-heading-row">
     <div>

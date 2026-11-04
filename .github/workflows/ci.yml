@@ -1,0 +1,66 @@
+name: Z-Split Backend CI
+
+on:
+  push:
+    branches: [main, master, backend-rs]
+  pull_request:
+    branches: [main, master, backend-rs]
+
+jobs:
+  check-and-test:
+    name: Lint, Unit Tests & Postgres E2E Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: zsplit
+          POSTGRES_PASSWORD: zsplit_test_password
+          POSTGRES_DB: zsplit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: zsplit-backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Protoc & SQLite
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler libsqlite3-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: zsplit-backend
+
+      - name: Format Check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy Lint
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Workspace Unit Tests
+        run: cargo test --workspace
+
+      - name: PostgreSQL Concurrency & E2E Tests
+        env:
+          DATABASE_URL: postgres://zsplit:zsplit_test_password@localhost:5432/zsplit_test
+        run: cargo test --package zsplit-integration --test postgres -- --ignored --nocapture
+
+      - name: Benchmark Microbenchmarks
+        run: cargo run --package zsplit-integration --bin zsplit-bench --release

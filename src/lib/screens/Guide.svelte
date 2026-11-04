@@ -29,7 +29,7 @@
   ];
 </script>
 
-<svelte:head><title>{privacy ? 'Privacy, plainly' : 'How it works'} — Z-Split</title></svelte:head>
+<svelte:head><title>{privacy ? 'Privacy, plainly' : 'How it works'} — Zool</title></svelte:head>
 <main id="main" class="workspace guide-page" use:enter>
   <div class="guide-heading">
     <div>
@@ -47,7 +47,7 @@
       <section>
         <h2>THE SPREADSHEET NEVER HAPPENS.</h2>
         <p>
-          Z-Split’s intended flow keeps the organizer from collecting a list of people and wallet
+          Zool’s intended flow keeps the organizer from collecting a list of people and wallet
           addresses. Organizers hand out claim links; recipients choose a destination themselves.
           The dashboard only needs progress and amounts.
         </p>

@@ -14,7 +14,7 @@ export function downloadClaimsPDF(room: Room, origin: string) {
   const text = (value: string, x: number, y: number, size: number) =>
     `BT /F1 ${size} Tf ${x} ${y} Td (${value.replace(/[^\x20-\x7E]/g, '').replace(/[\\()]/g, '\\$&')}) Tj ET\n`;
   for (let start = 1; start <= room.count; start += 12) {
-    let stream = text('Z-SPLIT / ONE-TIME CLAIMS', 32, 805, 20) + text(room.name, 32, 782, 11);
+    let stream = text('ZOOL / ONE-TIME CLAIMS', 32, 805, 20) + text(room.name, 32, 782, 11);
     for (let i = start; i < Math.min(start + 12, room.count + 1); i++) {
       const col = (i - start) % 3,
         row = Math.floor((i - start) / 3),
@@ -71,7 +71,7 @@ export function downloadClaimsPDF(room: Room, origin: string) {
   const url = URL.createObjectURL(new Blob([doc], { type: 'application/pdf' }));
   const link = document.createElement('a');
   link.href = url;
-  link.download = `z-split-${room.id}-claims.pdf`;
+  link.download = `zool-${room.id}-claims.pdf`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

@@ -35,10 +35,38 @@ export function claimAmount(room: Room, number: number) {
     : room.amount * (number === 1 ? 3 : number <= 3 ? 2 : 1);
 }
 export function poolTotal(room: Room) {
-  return Array.from({ length: room.count }, (_, i) => claimAmount(room, i + 1)).reduce(
-    (sum, n) => sum + n,
+  const totalZats = Array.from({ length: room.count }, (_, i) => claimAmount(room, i + 1)).reduce(
+    (sum, n) => sum + Math.round(n * 100_000_000),
     0
   );
+  return totalZats / 100_000_000;
+}
+
+/**
+ * Cleanly format Zatoshis to ZEC/TAZ string without floating point artifacts.
+ * e.g., 300000 zats -> "0.003", 100000000 zats -> "1"
+ */
+export function formatZatToZec(zats: number): string {
+  const zec = (zats / 100_000_000).toFixed(8);
+  return zec.replace(/\.?0+$/, '') || '0';
+}
+
+/**
+ * Cleanly format float ZEC/TAZ to fixed decimal string without floating point jitter.
+ */
+export function formatZecClean(amount: number): string {
+  const zats = Math.round(amount * 100_000_000);
+  return formatZatToZec(zats);
+}
+
+export function prizeRankLabel(number: number, split: 'equal' | 'tiers'): string {
+  if (split === 'tiers') {
+    if (number === 1) return '🥇 1st Prize';
+    if (number === 2) return '🥈 2nd Prize';
+    if (number === 3) return '🥉 3rd Prize';
+    return `Reward #${number}`;
+  }
+  return `Claim #${number}`;
 }
 export function remainingTotal(room: Room) {
   return Array.from({ length: room.count }, (_, i) => i + 1)

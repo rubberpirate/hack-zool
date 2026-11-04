@@ -1,0 +1,30 @@
+[package]
+name = "zsplit-integration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+zsplit-domain.workspace = true
+zsplit-store.workspace = true
+zsplit-claims.workspace = true
+zsplit-worker.workspace = true
+zsplit-zcash.workspace = true
+tokio.workspace = true
+sqlx.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+async-trait.workspace = true
+zeroize.workspace = true
+serde_json.workspace = true
+axum.workspace = true
+tower.workspace = true
+
+[[test]]
+name = "postgres"
+path = "e2e/postgres.rs"
+
+[[bin]]
+name = "zsplit-bench"
+path = "../benches/backend.rs"

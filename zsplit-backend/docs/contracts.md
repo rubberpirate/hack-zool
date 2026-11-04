@@ -1,0 +1,17 @@
+# Shared contracts (integration baseline)
+
+All backend paths are under zsplit-backend/. The lead owns workspace manifests, lockfile, domain and the queue dispatcher. The API hosts the apps/worker library with the same wallet Arc; there is no second worker process. Agents own only their assigned paths; request interface changes explicitly. Use the domain PayoutEngine interface unchanged. No recipient spending keys or personal sweep addresses are accepted. Mainnet is disabled by default.
+
+## Claims public interface
+TokenService::new(key: [u8;32]); issue() -> IssuedToken (token: Zeroizing<String>, digest: [u8;32]); digest(&str) -> Result<[u8;32], DomainError>; verify(&str, &[u8]) -> bool. ReceiverCipher::new(key: [u8;32]); encrypt(claim_id: Uuid, receiver: &str) -> Result<Vec<u8>, DomainError>; decrypt(claim_id: Uuid, ciphertext: &[u8]) -> Result<Zeroizing<String>, DomainError>. validate_receiver(receiver: &str, network: Network) -> Result<(), DomainError>. Token is canonical URL-safe no-padding base64. Domain separation and claim-ID AEAD associated data required. Add can_transition and expiry helpers as needed.
+
+## Store and API
+Agent 1 owns SQL schema and Store public methods. Publish method signatures to lead as first milestone. Constructor Store::connect(url: &str) async -> Result<Store, DomainError>, migrate() async. The API uses Arc<dyn PayoutEngine> and never proves in HTTP. Owner authentication initially a configured organizer bearer secret, hashed in memory; no password enrollment. Require browser persistence attestation before accepting receiver.
+
+Queue store interface required: lease_job(worker: Uuid) -> Option<PayoutJob>; recover_stale_jobs(); save_prepared(job_id, worker, &PreparedTransaction); mark_broadcast(job_id, worker); mark_manual_review(job_id, worker); defer_job(job_id, worker); tracked_jobs() -> Vec<PayoutJob>; reconcile_job(job_id, ChainTxStatus, required_confirmations); update_balance(BalanceSnapshot). PayoutJob fields id, claim_id, room_id, amount_zat, encrypted_receiver (Vec<u8>), txid (Option<String>), raw_transaction (Option<Vec<u8>>), state (String). Unique claim payout, room lock for issue/withdraw, reserve amount + per-claim fee budget. Never expire queued intent. Preparing stale jobs cannot be re-created automatically: reconcile native intent journal or quarantine. Persist prepared bytes and txid before any broadcast. Broadcast retries resend identical bytes. No SQL lock across wallet/network/proof calls.
+
+## Native wallet
+Agent 2 owns crates/zcash and apps/worker/src/wallet.rs only if needed. Export WalletConfig and NativeWallet::open(config) -> Result<NativeWallet, DomainError> (async or sync documented promptly). PayoutEngine implementation on NativeWallet, serialized bounded blocking actor for native work. A durable intent marker must precede proof creation; interrupted construction is quarantined unless recoverable from native wallet. Verify server network. No fake funds or success. Per-room SDK accounts isolate liabilities. Store coordinator seed outside DB in a protected file. Restrict file permissions.
+
+## Verification
+External funded-chain tests must be explicit and never silently pass. Existing frontend mocks are not wired to real wallet until compatibility is demonstrated. Integration specialist owns backend tests, scripts, benches, CI, Docker and documentation other than these contracts/lead ADR/privacy docs.

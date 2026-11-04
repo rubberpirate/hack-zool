@@ -15,12 +15,12 @@
       await goto(url.pathname.replace(/\/$/, ''));
     } catch {
       error =
-        'Paste a complete Z-Split claim link, like /claim/demo. Your organizer can send it again if you need it.';
+        'Paste a complete Zool claim link, like /claim/demo. Your organizer can send it again if you need it.';
     }
   }
 </script>
 
-<svelte:head><title>Open your claim — Z-Split</title></svelte:head>
+<svelte:head><title>Open your claim — Zool</title></svelte:head>
 <main id="main" class="workspace claim-entry-page" use:enter>
   <div class="claim-entry-copy">
     <p class="hand intro">a little something with your name off it.</p>
@@ -38,7 +38,7 @@
         autocapitalize="off"
         spellcheck="false"
         bind:value={link}
-        placeholder="https://z-split…/claim/…"
+        placeholder="https://zool…/claim/…"
         aria-invalid={!!error}
         aria-describedby={error ? 'claim-link-error' : 'link-private'}
       />{#if error}<p id="claim-link-error" class="form-error" role="alert">{error}</p>{/if}<Action

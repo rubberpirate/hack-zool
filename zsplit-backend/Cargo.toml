@@ -1,0 +1,62 @@
+[workspace]
+members = ["crates/domain", "crates/claims", "crates/store", "crates/zcash", "crates/frost", "apps/api", "apps/worker", "tests"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+zsplit-api = { path = "apps/api" }
+zsplit-worker = { path = "apps/worker" }
+zsplit-domain = { path = "crates/domain" }
+zsplit-claims = { path = "crates/claims" }
+zsplit-store = { path = "crates/store" }
+zsplit-zcash = { path = "crates/zcash" }
+zsplit-frost = { path = "crates/frost" }
+frost-ed25519 = { version = "3.0.0", features = ["serde"] }
+frost-core = { version = "3.0.0", features = ["serde"] }
+async-trait = "0.1"
+axum = { version = "0.8", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+utoipa = { version = "=6.0.0", features = ["uuid", "chrono"] }
+utoipa-swagger-ui = { version = "=10.0.2", features = ["axum", "vendored"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-tokio", "tls-rustls-ring", "postgres", "uuid", "chrono", "migrate", "macros"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tower = { version = "0.5", features = ["util", "limit", "timeout"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "request-id", "timeout", "limit", "set-header"] }
+thiserror = "2"
+secrecy = "0.8"
+zeroize = { version = "1", features = ["derive"] }
+rand = "0.8"
+hmac = "0.12"
+sha2 = "0.10"
+subtle = "2"
+base64 = "0.22"
+hex = "0.4"
+chacha20poly1305 = "0.10"
+anyhow = "1"
+futures-util = "0.3"
+tokio-stream = { version = "0.1", features = ["sync"] }
+tempfile = "3"
+zcash_client_backend = { version = "=0.25.0", features = ["orchard", "sync", "lightwalletd-tonic-transport", "lightwalletd-tonic-tls-webpki-roots"] }
+zcash_client_sqlite = { version = "=0.23.0", features = ["orchard"] }
+zcash_keys = { version = "=0.17.0", features = ["orchard", "sapling"] }
+zcash_address = "=0.14.0"
+zcash_protocol = "=0.11.0"
+zcash_primitives = "=0.31.0"
+zcash_proofs = "=0.31.0"
+orchard = "=0.16.0"
+zip32 = "=0.3.0"
+zip321 = "=0.10.0"
+tonic = { version = "0.14", features = ["transport", "tls-webpki-roots", "tls-ring"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+rand10 = { package = "rand", version = "0.10" }
+rand_chacha = "0.10"

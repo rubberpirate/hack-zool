@@ -2,7 +2,7 @@
   import { onMount, tick } from 'svelte';
   import { goto } from '$app/navigation';
   import { app, claimLink, copyText, notify } from '#lib/state.svelte.ts';
-  import { claimAmount, daysLeft } from '#lib/model.ts';
+  import { claimAmount, daysLeft, formatZatToZec, prizeRankLabel } from '#lib/model.ts';
   import Action from '#lib/components/Action.svelte';
   import Art from '#lib/components/Art.svelte';
   import QR from '#lib/components/QR.svelte';
@@ -17,6 +17,82 @@
   let origin = $state('');
   let exporting = $state(false);
   let printing = $state(false);
+  let showEmailModal = $state(false);
+  let sendingEmails = $state(false);
+  let emailApiKey = $state(typeof localStorage !== 'undefined' ? localStorage.getItem('zool-resend-key') || '' : '');
+  let emailStatus = $state('');
+  let bulkEmailText = $state('');
+  let recipientList = $state<string[]>([]);
+
+  $effect(() => {
+    if (recipientList.length !== app.room.count) {
+      recipientList = Array.from({ length: app.room.count }, () => '');
+    }
+  });
+
+  function applyBulkEmails() {
+    const lines = bulkEmailText
+      .split(/[\n,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (let i = 0; i < app.room.count; i++) {
+      recipientList[i] = lines[i] || '';
+    }
+    notify(`Applied ${lines.length} emails to claims list.`);
+  }
+
+  async function sendEmails() {
+    const toSend = recipientList
+      .map((email, idx) => {
+        const number = idx + 1;
+        const amountZat = app.issuedTickets?.[idx]?.amount_zat ?? Math.round(claimAmount(app.room, number) * 100_000_000);
+        return {
+          email: email.trim(),
+          number,
+          amountZec: formatZatToZec(amountZat),
+          prizeLabel: prizeRankLabel(number, app.room.split),
+          claimUrl: claimLink(number),
+        };
+      })
+      .filter((r) => !!r.email);
+
+    if (toSend.length === 0) {
+      notify('Enter at least one participant email address.');
+      return;
+    }
+
+    if (emailApiKey) {
+      try { localStorage.setItem('zool-resend-key', emailApiKey); } catch {}
+    }
+
+    sendingEmails = true;
+    emailStatus = `Sending ${toSend.length} claim email(s) via Resend…`;
+
+    try {
+      const res = await fetch('/resend-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: emailApiKey,
+          roomName: app.room.name || 'Zool Payout',
+          recipients: toSend,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to dispatch emails');
+
+      emailStatus = `✓ Successfully delivered ${data.delivered} of ${toSend.length} emails!`;
+      notify(`Sent ${data.delivered} claim email(s) via Resend!`);
+    } catch (err: any) {
+      emailStatus = `Error: ${err.message || 'Failed to send'}`;
+      notify(`Email failed: ${err.message || 'Error'}`);
+    } finally {
+      sendingEmails = false;
+    }
+  }
   onMount(() => {
     origin = location.origin;
     const after = () => {
@@ -68,10 +144,14 @@
     }
     const links = Array.from({ length: app.room.count }, (_, i) => i + 1)
       .filter((n) => !app.room.claimed.includes(n))
-      .map(
-        (n) =>
-          `${String(n).padStart(2, '0')} — ${claimAmount(app.room, n).toFixed(2)} ZEC — ${claimLink(n)}`
-      )
+      .map((n) => {
+        const amt = formatZatToZec(
+          app.issuedTickets?.[n - 1]?.amount_zat ??
+          Math.round(claimAmount(app.room, n) * 100_000_000)
+        );
+        const rank = prizeRankLabel(n, app.room.split);
+        return `${String(n).padStart(2, '0')} (${rank}) — ${amt} TAZ — ${claimLink(n)}`;
+      })
       .join('\n');
     if (!links) {
       notify('All links have been claimed. Nothing left to copy.');
@@ -90,7 +170,7 @@
   }
 </script>
 
-<svelte:head><title>Your claim links — Z-Split</title></svelte:head>
+<svelte:head><title>Your claim links — Zool</title></svelte:head>
 <main id="main" class="workspace claims-page" use:enter>
   <p class="hand intro">
     {unavailable
@@ -106,9 +186,15 @@
       class="pill"
       disabled={exporting}
       onclick={pdf}>{exporting ? 'PREPARING…' : 'DOWNLOAD PDF'}</button
-    ><button class="pill" onclick={copyAll}>COPY ALL LINKS</button><Action href="/room/live"
-      >Open live room</Action
+    ><button class="pill" onclick={copyAll}>COPY ALL LINKS</button>
+    <button
+      class="pill"
+      style="background: #111; color: #fff;"
+      onclick={() => (showEmailModal = true)}
     >
+      📧 EMAIL TO PARTICIPANTS (RESEND)
+    </button>
+    <Action href="/room/live">Open live room</Action>
   </div>
 
   {#if showDispatch}
@@ -163,8 +249,8 @@
           class="qr-card"
           class:claimed={app.room.claimed.includes(number)}
           class:closed={unavailable}
-          href={`/claim/${app.room.id}-${number}`}
-          aria-label={`Claim ${number}, ${claimAmount(app.room, number).toFixed(2)} ZEC, ${app.room.claimed.includes(number) ? 'claimed' : unavailable ? unavailableStatus.toLowerCase() : 'open'}`}
+          href={claimLink(number)}
+          aria-label={`Claim ${number}, ${prizeRankLabel(number, app.room.split)}, ${formatZatToZec(app.issuedTickets?.[number - 1]?.amount_zat ?? Math.round(claimAmount(app.room, number) * 100_000_000))} TAZ, ${app.room.claimed.includes(number) ? 'claimed' : unavailable ? unavailableStatus.toLowerCase() : 'open'}`}
           ><div class="qr-card-heading">
             <h2>No. {String(number).padStart(2, '0')}</h2>
             <span class="status-chip"
@@ -175,6 +261,9 @@
                   : 'OPEN'}</span
             >
           </div>
+          <div style="font-size: 0.72rem; font-weight: 700; color: #4a5568; margin-top: -0.4rem; margin-bottom: 0.4rem;">
+            {prizeRankLabel(number, app.room.split)}
+          </div>
           {#if app.room.claimed.includes(number)}
             <div class="claimed-art">
               <Art kind="coin-check" />
@@ -182,10 +271,16 @@
           {:else if unavailable}<div class="claimed-art closed-art">
               <span><Icon name="close" size={48} /></span>
             </div>{:else if origin}<QR
-              value={`${origin}/claim/${app.room.id}-${number}`}
+              value={claimLink(number)}
             />{:else}<div class="qr-image"></div>{/if}
           <div class="qr-card-foot hand">
-            <span>{claimAmount(app.room, number).toFixed(2)}<br />ZEC</span><span class="muted"
+            <span>
+              {formatZatToZec(
+                app.issuedTickets?.[number - 1]?.amount_zat ??
+                Math.round(claimAmount(app.room, number) * 100_000_000)
+              )}<br />TAZ
+            </span>
+            <span class="muted"
               >{app.room.claimed.includes(number)
                 ? 'link is'
                 : unavailable
@@ -217,4 +312,83 @@
     </nav>
     <p class="hand">a claimed QR goes dead, so a photo of it is useless.</p>
   </div>
+
+  {#if showEmailModal}
+    <div
+      class="modal-backdrop"
+      style="position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1rem;"
+      onclick={() => (showEmailModal = false)}
+      role="presentation"
+    >
+      <div
+        class="modal-card"
+        style="background: #ffffff; color: #111; max-width: 620px; width: 100%; border: 2px solid #000; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => { if (e.key === 'Escape') showEmailModal = false; }}
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px dashed #cbd5e0; padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+          <h2 style="margin: 0; font-size: 1.25rem; font-weight: 900;">📧 Distribute Claims via Resend</h2>
+          <button class="circle-button" onclick={() => (showEmailModal = false)}>✕</button>
+        </div>
+        <p class="hand" style="font-size: 0.85rem; color: #4a5568; margin: 0 0 1rem;">
+          Send individual claim links to each participant at once. Each recipient receives only their designated share (1st, 2nd, 3rd place prizes).
+        </p>
+
+        <div style="margin-bottom: 1rem;">
+          <label for="bulk-emails" style="font-size: 0.75rem; font-weight: 800; display: block; margin-bottom: 0.25rem;">BULK PASTE EMAILS (ONE PER LINE OR COMMA-SEPARATED)</label>
+          <textarea
+            id="bulk-emails"
+            rows="3"
+            placeholder="alice@example.com&#10;bob@example.com&#10;charlie@example.com"
+            bind:value={bulkEmailText}
+            style="width: 100%; font-family: monospace; font-size: 0.8rem; padding: 0.5rem; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box;"
+          ></textarea>
+          <button type="button" class="pill" style="margin-top: 0.4rem; font-size: 0.75rem;" onclick={applyBulkEmails}>
+            ↓ Apply to Participant Slots
+          </button>
+        </div>
+
+        <div style="max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; background: #fbfbf9;">
+          {#each Array.from({ length: app.room.count }, (_, i) => i + 1) as num}
+            {@const amt = formatZatToZec(app.issuedTickets?.[num - 1]?.amount_zat ?? Math.round(claimAmount(app.room, num) * 100_000_000))}
+            {@const rank = prizeRankLabel(num, app.room.split)}
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.75rem; font-weight: bold; width: 160px; flex-shrink: 0;">
+                No. {String(num).padStart(2, '0')} ({rank}):<br/>
+                <span style="color: #2b6cb0;">{amt} TAZ</span>
+              </span>
+              <input
+                type="email"
+                placeholder="participant@domain.com"
+                bind:value={recipientList[num - 1]}
+                style="flex: 1; font-size: 0.8rem; padding: 0.4rem 0.6rem; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box;"
+              />
+            </div>
+          {/each}
+        </div>
+
+        {#if emailStatus}
+          <p style="font-size: 0.85rem; font-weight: bold; color: {emailStatus.startsWith('✓') ? '#2ecc71' : '#e53e3e'}; margin-bottom: 0.75rem;">
+            {emailStatus}
+          </p>
+        {/if}
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="pill" onclick={() => (showEmailModal = false)}>Close</button>
+          <button
+            type="button"
+            class="pill"
+            style="background: #111; color: #fff;"
+            disabled={sendingEmails}
+            onclick={sendEmails}
+          >
+            {sendingEmails ? 'Dispatching Emails…' : '🚀 Send Claim Emails via Resend'}
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
 </main>

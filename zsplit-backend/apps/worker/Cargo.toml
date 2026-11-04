@@ -1,0 +1,20 @@
+[package]
+name = "zsplit-worker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+zsplit-domain.workspace = true
+zsplit-store.workspace = true
+zsplit-claims.workspace = true
+zsplit-zcash.workspace = true
+tokio.workspace = true
+sqlx.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+hex.workspace = true
+zeroize.workspace = true
