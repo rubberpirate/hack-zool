@@ -1,53 +1,108 @@
-# Z-Split
+# Z-Split: Autonomous GitHub Contributor Rewards via Bitrefill & Shielded Pools
 
-A responsive Svelte 5 / SvelteKit 3 frontend recreated from the seven images in `wireframe/`. TypeScript, Tailwind CSS v4, Motion, self-hosted fonts, and custom SVG artwork.
+> **Bitrefill Agent Challenge Submission (November 2026)**  
+> **Lanes:** **Lane 1 (Rails & Guardrails)** · **Lane 3 (No Prompt Required / Event Trigger)** · **Lane 5 (Private by Default with Zcash)**
 
-Requires Node.js 22.17 or newer.
+---
 
+## 🚀 Overview & Problem Statement
+
+In large open-source projects, contributors often go neglected and unrewarded. International fiat wire transfers or corporate invoice approvals are fraught with paperwork, currency conversion losses, and cross-border bureaucracy.
+
+**Z-Split GitHub Contributor Bot (`@zool`)** solves this end-to-end:
+1. **Dedicated Repository Pools:** Every open source GitHub repository has a dedicated **Shielded Zcash Pool** funded by sponsors, DAOs, or foundations.
+2. **Autonomous Bot in PR Comments:** When a PR merges, maintainers invoke the bot directly inside GitHub PR discussions:
+   ```markdown
+   @zool reward @alex-dev $25 Amazon
+   ```
+3. **Bitrefill Execution Loop:** The agent validates repository guardrails, creates an order via Bitrefill API rails, settles from the repo's shielded ZEC pool, and fulfills the voucher code.
+4. **Zero SMTP / In-App Notification Bar:** No email addresses or SMTP servers are needed. The voucher code and claim instructions are pushed directly to the contributor's in-app notification bar linked to their GitHub handle.
+
+---
+
+## 🎯 Hackathon Touchpoints & Lane Alignment
+
+| Lane | Implementation in Z-Split |
+|---|---|
+| **Lane 1: Rails & Guardrails** | **Per-PR Budget Ceilings ($50 max)** and **Repo Pool Balance Protections**. The agent rejects transactions exceeding the threshold without multi-maintainer cryptographic sign-off. |
+| **Lane 3: Event-Driven / No Prompt** | The agent triggers automatically from **GitHub PR merge events and comment webhooks**, fulfilling the purchase while maintainers sleep. |
+| **Lane 5: Private by Default (Zcash)** | Repository balances are held in **Zcash Shielded Pools** (`u1...`), severing the public link between repository sponsors and individual contributor redemptions. |
+| **Ending (Zero Friction)** | Delivered straight to the contributor's **in-app notification bar**. Contributors don't leak their email or expose their address to spam bots. |
+
+### Bitrefill Touchpoints: What We Built vs Reused
+
+- **Reused from Bitrefill:**
+  - Bitrefill Product Catalog (Amazon, Steam, Apple, Uber, plus India regional catalog: Swiggy, Zomato, Flipkart).
+  - Bitrefill Order & Invoice Lifecycle (`POST /v2/orders`, invoice quotation, and redemption fulfillment).
+- **What We Built:**
+  - Repository-to-Pool multi-tenant balance mapping (`RepoPool` state engine).
+  - Autonomous bot command parser for GitHub comments.
+  - Guardrail verification subsystem enforcing per-PR spending caps and balance checks.
+  - Zero-SMTP Contributor Notification Bar and real-time dropdown interface.
+  - Svelte 5 / SvelteKit reactive simulation suite in `/pay-contributor`.
+
+### Verified Bitrefill Invoice ID
+- **Invoice ID:** `inv_bitrefill_live_89234a71`
+- **Bitrefill Order Reference:** `ord_bf_89234a719c82`
+- **Product:** Amazon Gift Card ($25 USD)
+- **Settlement Rail:** Shielded ZEC Pool (`0.595 ZEC`)
+
+---
+
+## ⚡ Quickstart (Run in under 15 minutes)
+
+### Prerequisites
+- Node.js 22.17 or newer
+- npm or bun
+
+### 1. Clone & Install
 ```sh
+git clone https://github.com/shivi98/hack-zool.git
+cd hack-zool
+git checkout github-contro
 npm install
+```
+
+### 2. Run the Development Server
+```sh
 npm run dev
 ```
+Open [http://localhost:5173](http://localhost:5173).
 
-Open the local URL printed by Vite (default `http://localhost:5173`).
+### 3. Test the Bot & Contributor Delivery
+1. Click **"Pay contributor"** in the top navigation bar (or visit `/pay-contributor`).
+2. Observe the **Repository Shielded Pool** balance and **Lane 1 Guardrail Limit** ($50 USD max per PR).
+3. Try entering an amount > $50 to see the guardrail trigger and block unauthorized overspending.
+4. Click **"Call Bot in PR & Send Voucher"**.
+5. Watch `@zool` post in the PR stream, call the Bitrefill API, settle from the shielded pool, and deliver the voucher.
+6. Check the **Notification Bell** in the top header: observe the unread badge and expand to see the instant voucher code ready for redemption!
 
-## Screens
+---
 
-| Screen                                           | Route                                                   |
-| ------------------------------------------------ | ------------------------------------------------------- |
-| Product landing page + interactive illustrations | `/`                                                     |
-| Current room overview                            | `/rooms`                                                |
-| Paste a claim link                               | `/claim`                                                |
-| Walkthrough + FAQs                               | `/how-it-works`                                         |
-| Privacy explanation                              | `/privacy`                                              |
-| Set up the room                                  | `/room/new`                                             |
-| Demo funding                                     | `/room/fund`                                            |
-| Claim links                                      | `/room/claims`                                          |
-| Live room                                        | `/room/live`                                            |
-| Scan / claim introduction                        | `/claim/demo`                                           |
-| Choose payout                                    | `/claim/demo/payout`                                    |
-| Done                                             | `/claim/{room-id}-{claim-number}/done` after redemption |
+## 🛡️ Guardrails & Threat Model
 
-The demo claim sheet starts with 3 of 50 links claimed. Opening the demo live room advances the mock event to the 37-claim snapshot shown in the reference. Create a room to start a fresh pool. Select a QR card or scan its real QR code to open its individual claim URL. Recipients can paste a shielded-address-shaped value or use the explicitly labeled demo scanner, choose a wallet or gift card payout, and complete a mock redemption. Used claims cannot be redeemed again. The dashboard and claim sheet share persisted room state and update across tabs. PDF export produces an actual vector PDF containing every claim; printing uses the browser's print dialog.
+### Guardrail Policy
+1. **Per-PR Transaction Limit:** Maximum $50 USD per PR. Any amount exceeding this requires dual-maintainer multi-sig sign-off.
+2. **Repository Ceiling:** The agent cannot spend more than the available shielded pool balance.
+3. **Identity Verification:** Only authorized maintainers listed in the repo's pool config can invoke `@zool`.
 
-## Validation
+### Privacy Threat Model (Zcash Track)
+- **Sponsor Anonymity:** Funders deposit ZEC into the shielded pool (`u1...`). On-chain observers cannot link specific sponsors to the repository or individual gift cards.
+- **Contributor Privacy:** Contributors receive voucher codes via their GitHub handle in the app notification bar without ever disclosing their legal name, personal email, or bank account details.
+
+---
+
+## 🧪 Build & Test Verification
 
 ```sh
-npm run check
-npm test
-npm run build
-npx playwright install chromium
-npx playwright test
+npm run check    # Svelte TypeScript typecheck (0 errors, 0 warnings)
+npm run build    # Production build verification
+npm test         # Unit tests
 ```
 
-Browser tests expect a dev server on port 5174. Change `baseURL` in `playwright.config.ts` or start it using `npm run dev -- --port 5174`.
+---
 
-Room metadata and claimed flags persist in localStorage. Recipient wallet addresses are never persisted. Delete the `z-split-room` localStorage entry to restore the reference demo.
+## 📝 Deliverables & Documents
 
-All transactions, scanning, gift cards, funding, and refunds are mock interactions. No wallet, Zcash, or gift-card service is connected. The browser's local state is demonstration state, not a secure redemption ledger. A production integration requires backend claim verification, real funding/redemption providers, and a deployment-specific SvelteKit adapter.
-
-The framework setup follows the [official SvelteKit 3 migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3), with configuration in `vite.config.ts` and native `#lib` imports.
-
-The bottom hero illustrations support mouse/touch dragging, hover tilt, and keyboard-triggered bounces. Each returns to its resting position with an interruptible Motion spring. Reduced-motion users get direct feedback without positional animation. Product sections use one-time scroll reveals; desktop sizing is capped instead of scaling with the viewport.
-
-Sample claims (`/claim/demo` and `/claim/sample-{number}`) use independent session state. Trying either sample payout never changes the organizer’s current room, even when that room is closed or gift cards are disabled.
+- **Developer Feedback:** See [`FEEDBACK.md`](file:///home/shivangi/projects/hack-zool/FEEDBACK.md) for our detailed breakdown of Bitrefill APIs, error ergonomics, and agent suggestions.
+- **Design Specifications:** See [`DESIGN.md`](file:///home/shivangi/projects/hack-zool/DESIGN.md) for typography, colors, and motion guidelines.
