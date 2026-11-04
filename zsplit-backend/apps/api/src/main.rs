@@ -130,7 +130,7 @@ async fn main() -> anyhow::Result<()> {
             worker_cipher,
             zsplit_worker::WorkerConfig {
                 confirmations,
-                poll_interval: Duration::from_secs(2),
+                poll_interval: Duration::from_secs(5),
             },
             worker_rx,
         )

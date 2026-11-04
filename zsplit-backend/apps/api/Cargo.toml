@@ -9,6 +9,7 @@ zsplit-domain.workspace = true
 zsplit-store.workspace = true
 zsplit-claims.workspace = true
 zsplit-zcash.workspace = true
+zsplit-frost.workspace = true
 axum.workspace = true
 tokio.workspace = true
 utoipa.workspace = true

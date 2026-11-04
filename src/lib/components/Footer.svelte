@@ -1,6 +1,6 @@
 <footer class="site-footer">
-  <a class="footer-wordmark" href="/" aria-label="Z-Split home"
-    >Z-SPLIT<svg viewBox="0 0 24 24" aria-hidden="true"
+  <a class="footer-wordmark" href="/" aria-label="Zool home"
+    >ZOOL<svg viewBox="0 0 24 24" aria-hidden="true"
       ><path d="M12 1v22M1 12h22M4 4l16 16M20 4 4 20" stroke="currentColor" stroke-width="3" /></svg
     ></a
   >

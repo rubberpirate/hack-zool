@@ -55,8 +55,8 @@ pub async fn run(
                             }
                         }
                     }
-                    Err(_) => {
-                        tracing::warn!(code = "wallet_sync_unavailable");
+                    Err(e) => {
+                        tracing::warn!(code = "wallet_sync_unavailable", error = ?e);
                         continue;
                     }
                 }

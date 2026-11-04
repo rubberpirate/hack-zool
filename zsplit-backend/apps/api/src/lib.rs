@@ -287,6 +287,8 @@ pub struct CreateRoomRequest {
     pub network: String,
     pub amounts_zat: Vec<u64>,
     pub expires_at: DateTime<Utc>,
+    #[serde(default)]
+    pub fee_reserve_zat: Option<u64>,
 }
 #[derive(Serialize, ToSchema)]
 pub struct RoomResponse {
@@ -323,6 +325,8 @@ pub struct DepositResponse {
     pub birthday_height: u32,
     pub confirmed_zat: u64,
     pub spendable_zat: u64,
+    pub required_zat: u64,
+    pub is_ready: bool,
     pub scanned_height: u32,
     pub chain_height: u32,
 }
@@ -451,6 +455,29 @@ pub struct SweepReportResponse {
     pub verified: bool,
 }
 
+#[derive(Serialize, ToSchema)]
+pub struct FrostSetupResponse {
+    pub min_signers: u16,
+    pub max_signers: u16,
+    pub group_public_key: String,
+    pub public_key_package: String,
+    pub key_packages: Vec<String>,
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct FrostSignRequest {
+    pub group_public_key: String,
+    pub message: String,
+    pub key_packages: Vec<String>,
+    pub public_key_package: String,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct FrostSignResponse {
+    pub signature_hex: String,
+    pub verified: bool,
+}
+
 #[utoipa::path(get,path="/healthz",responses((status=200,body=HealthResponse)))]
 async fn health() -> Json<HealthResponse> {
     Json(HealthResponse {
@@ -464,9 +491,11 @@ async fn ready(State(s): State<Arc<AppState>>) -> Result<Json<HealthResponse>, A
     }
     s.store.ready().await?;
     if s.store.rooms().await?.iter().any(|r| {
-        r.balance_updated_at
-            .is_none_or(|at| Utc::now().signed_duration_since(at).num_seconds() > 120)
-            || r.chain_height - r.scanned_height > 2
+        r.state == "ready"
+            && (r
+                .balance_updated_at
+                .is_none_or(|at| Utc::now().signed_duration_since(at).num_seconds() > 3600)
+                || r.chain_height.saturating_sub(r.scanned_height) > 100)
     }) {
         return Err(DomainError::Unavailable.into());
     }
@@ -490,7 +519,8 @@ async fn create_room(
     if network != s.config.network {
         return Err(DomainError::NetworkMismatch.into());
     }
-    zsplit_store::validate_amounts(&req.amounts_zat, DEFAULT_FEE_RESERVE)?;
+    let fee_reserve = req.fee_reserve_zat.unwrap_or(DEFAULT_FEE_RESERVE);
+    zsplit_store::validate_amounts(&req.amounts_zat, fee_reserve)?;
     if req.expires_at <= Utc::now() || req.expires_at > Utc::now() + chrono::Duration::days(30) {
         return Err(DomainError::InvalidInput.into());
     }
@@ -508,7 +538,7 @@ async fn create_room(
             deposit_address: deposit.address,
             birthday_height: deposit.birthday_height,
             amounts: req.amounts_zat,
-            fee_reserve_zat: DEFAULT_FEE_RESERVE,
+            fee_reserve_zat: fee_reserve,
             expires_at: req.expires_at,
         })
         .await?;
@@ -531,6 +561,8 @@ async fn deposit(
 ) -> Result<Json<DepositResponse>, ApiError> {
     let owner = s.authorize(&headers)?;
     let r = s.store.room(id(&room)?, owner).await?;
+    let required =
+        zsplit_store::validate_amounts(&r.payout_amounts, r.fee_reserve_zat as u64).unwrap_or(0);
     Ok(Json(DepositResponse {
         room_id: r.id,
         network: r.network,
@@ -538,6 +570,32 @@ async fn deposit(
         birthday_height: r.birthday_height as u32,
         confirmed_zat: r.confirmed_zat as u64,
         spendable_zat: r.spendable_zat as u64,
+        required_zat: required as u64,
+        is_ready: r.state == "ready",
+        scanned_height: r.scanned_height as u32,
+        chain_height: r.chain_height as u32,
+    }))
+}
+async fn dev_confirm(
+    State(s): State<Arc<AppState>>,
+    Path(room): Path<String>,
+    headers: HeaderMap,
+) -> Result<Json<DepositResponse>, ApiError> {
+    let owner = s.authorize(&headers)?;
+    let room_id = id(&room)?;
+    s.store.dev_fund_room(room_id, owner).await?;
+    let r = s.store.room(room_id, owner).await?;
+    let required =
+        zsplit_store::validate_amounts(&r.payout_amounts, r.fee_reserve_zat as u64).unwrap_or(0);
+    Ok(Json(DepositResponse {
+        room_id: r.id,
+        network: r.network,
+        address: r.deposit_address,
+        birthday_height: r.birthday_height as u32,
+        confirmed_zat: r.confirmed_zat as u64,
+        spendable_zat: r.spendable_zat as u64,
+        required_zat: required as u64,
+        is_ready: r.state == "ready",
         scanned_height: r.scanned_height as u32,
         chain_height: r.chain_height as u32,
     }))
@@ -735,6 +793,52 @@ async fn sweep_report(
         verified: false,
     }))
 }
+
+#[utoipa::path(post, path="/api/v1/frost/setup", responses((status=200, body=FrostSetupResponse)))]
+async fn frost_setup() -> Result<Json<FrostSetupResponse>, ApiError> {
+    let setup = zsplit_frost::setup_threshold_treasury(2, 3).map_err(|_e| {
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "frost_error",
+            "Failed to setup FROST",
+        )
+    })?;
+    Ok(Json(FrostSetupResponse {
+        min_signers: setup.min_signers,
+        max_signers: setup.max_signers,
+        group_public_key: setup.group_public_key,
+        public_key_package: setup.public_key_package_json,
+        key_packages: setup.key_packages_json,
+    }))
+}
+
+#[utoipa::path(post, path="/api/v1/frost/sign", request_body=FrostSignRequest, responses((status=200, body=FrostSignResponse)))]
+async fn frost_sign(
+    body: Result<Json<FrostSignRequest>, JsonRejection>,
+) -> Result<Json<FrostSignResponse>, ApiError> {
+    let req = json(body)?;
+    let msg_bytes = req.message.as_bytes();
+    let sig_bytes = zsplit_frost::generate_threshold_signature(
+        &req.key_packages,
+        &req.public_key_package,
+        msg_bytes,
+    )
+    .map_err(|_| {
+        ApiError::new(
+            StatusCode::BAD_REQUEST,
+            "frost_error",
+            "Failed to generate threshold signature",
+        )
+    })?;
+    let verified =
+        zsplit_frost::verify_frost_authorization(&req.group_public_key, msg_bytes, &sig_bytes)
+            .unwrap_or(false);
+    Ok(Json(FrostSignResponse {
+        signature_hex: hex::encode(sig_bytes),
+        verified,
+    }))
+}
+
 async fn openapi() -> Json<utoipa::openapi::OpenApi> {
     Json(ApiDoc::openapi())
 }
@@ -776,6 +880,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/v1/rooms", post(create_room))
         .route("/api/v1/rooms/{room_id}", get(get_room))
         .route("/api/v1/rooms/{room_id}/deposit", get(deposit))
+        .route("/api/v1/rooms/{room_id}/dev-confirm", post(dev_confirm))
         .route("/api/v1/rooms/{room_id}/claims", post(issue))
         .route("/api/v1/rooms/{room_id}/summary", get(summary))
         .route("/api/v1/rooms/{room_id}/events", get(events))
@@ -784,6 +889,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/v1/claims/{claim_id}/status", get(claim_status))
         .route("/api/v1/claims/{claim_id}/redeem", post(redeem))
         .route("/api/v1/claims/{claim_id}/sweep-report", post(sweep_report))
+        .route("/api/v1/frost/setup", post(frost_setup))
+        .route("/api/v1/frost/sign", post(frost_sign))
         .fallback(|| async { ApiError::from(DomainError::NotFound) });
     if state.config.docs_enabled {
         app = app.merge(

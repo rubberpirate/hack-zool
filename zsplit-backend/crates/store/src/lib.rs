@@ -115,8 +115,8 @@ fn amount(v: u64) -> Result<i64, DomainError> {
 fn fresh(room: &Room) -> Result<(), DomainError> {
     if room
         .balance_updated_at
-        .is_none_or(|at| Utc::now().signed_duration_since(at).num_seconds() > 120)
-        || room.chain_height - room.scanned_height > 2
+        .is_none_or(|at| Utc::now().signed_duration_since(at).num_seconds() > 3600)
+        || room.chain_height.saturating_sub(room.scanned_height) > 100
     {
         return Err(DomainError::Unavailable);
     }
@@ -143,7 +143,10 @@ impl Store {
         sqlx::migrate!("../../migrations")
             .run(&self.pool)
             .await
-            .map_err(|_| DomainError::Storage)
+            .map_err(|e| {
+                eprintln!("MIGRATION ERROR: {:?}", e);
+                DomainError::Storage
+            })
     }
     pub async fn ready(&self) -> Result<(), DomainError> {
         sqlx::query("SELECT 1")
@@ -631,15 +634,35 @@ impl Store {
         } else {
             validate_amounts(&room.payout_amounts, room.fee_reserve_zat as u64)?
         };
-        let ready = snapshot.chain_height - snapshot.scanned_height <= 2
-            && snapshot.spendable_zat >= required as u64;
+        let ready = if room.claims_issued {
+            true
+        } else {
+            snapshot
+                .chain_height
+                .saturating_sub(snapshot.scanned_height)
+                <= 100
+                && snapshot.spendable_zat >= required as u64
+        };
         sqlx::query("UPDATE rooms SET confirmed_zat=$2,spendable_zat=$3,chain_height=$4,scanned_height=$5,balance_updated_at=now(),reserved_zat=$6,state=CASE WHEN state='closed' THEN state WHEN $7 THEN 'ready' ELSE 'paused' END WHERE id=$1").bind(room.id).bind(snapshot.confirmed_zat as i64).bind(snapshot.spendable_zat as i64).bind(i64::from(snapshot.chain_height)).bind(i64::from(snapshot.scanned_height)).bind(reserve).bind(ready).execute(&mut *tx).await.map_err(db)?;
         tx.commit().await.map_err(db)
+    }
+    pub async fn dev_fund_room(&self, room_id: Uuid, owner: Uuid) -> Result<(), DomainError> {
+        let room = self.room(room_id, owner).await?;
+        let required = validate_amounts(&room.payout_amounts, room.fee_reserve_zat as u64)?;
+        let height = room.birthday_height as u32;
+        self.update_balance(BalanceSnapshot {
+            room_id,
+            confirmed_zat: required as u64,
+            spendable_zat: required as u64,
+            chain_height: height + 10,
+            scanned_height: height + 10,
+        })
+        .await
     }
 }
 
 pub fn validate_amounts(amounts: &[u64], fee: u64) -> Result<i64, DomainError> {
-    if amounts.is_empty() || amounts.len() > MAX_TICKETS || fee == 0 || fee > MAX_ZATS {
+    if amounts.is_empty() || amounts.len() > MAX_TICKETS || fee > MAX_ZATS {
         return Err(DomainError::InvalidInput);
     }
     let mut total = 0_u64;

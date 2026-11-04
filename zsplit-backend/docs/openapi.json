@@ -788,6 +788,14 @@
             "type": "string",
             "format": "date-time"
           },
+          "fee_reserve_zat": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
           "network": {
             "type": "string"
           }
@@ -803,6 +811,8 @@
           "birthday_height",
           "confirmed_zat",
           "spendable_zat",
+          "required_zat",
+          "is_ready",
           "scanned_height",
           "chain_height"
         ],
@@ -825,8 +835,16 @@
             "format": "int64",
             "minimum": 0
           },
+          "is_ready": {
+            "type": "boolean"
+          },
           "network": {
             "type": "string"
+          },
+          "required_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
           },
           "room_id": {
             "type": "string",

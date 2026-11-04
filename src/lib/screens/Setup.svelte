@@ -1,62 +1,211 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
-  import { app, createRoom, saveRoom, notify } from '#lib/state.svelte.ts';
-  import { poolTotal } from '#lib/model.ts';
+  import {
+    app,
+    createRealRoom,
+    saveRoom,
+    notify,
+    checkDepositStatus,
+    mintClaims,
+    copyText,
+  } from '#lib/state.svelte.ts';
+  import { poolTotal, formatZatToZec } from '#lib/model.ts';
+  import { setupBackendFrost, signBackendFrost, devConfirmBackendDeposit } from '#lib/api.ts';
   import Action from '#lib/components/Action.svelte';
   import Art from '#lib/components/Art.svelte';
   import Icon from '#lib/components/Icon.svelte';
+  import QR from '#lib/components/QR.svelte';
   import { enter } from '#lib/motion.ts';
+
   let { fund = false }: { fund?: boolean } = $props();
   let name = $state('');
   let count = $state(50);
-  let amount = $state(0.5);
+  let amount = $state(0.001);
   let expiry = $state(7);
   let split = $state<'equal' | 'tiers'>('equal');
   let giftCards = $state(true);
   let busy = $state(false);
+  let checking = $state(false);
   let error = $state('');
+  let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let frostEnabled = $state(false);
+  let frostBusy = $state(false);
+
   const total = $derived(
     poolTotal({ ...app.room, count: Number(count) || 1, amount: Number(amount) || 0, split })
   );
+
+  const payoutTotalZat = $derived(
+    Math.round(total * 100_000_000)
+  );
+  const feeReserveTotalZat = $derived(
+    app.backendRoom?.fee_budget_per_ticket_zat
+      ? app.backendRoom.fee_budget_per_ticket_zat * (Number(count) || 1)
+      : 10_000 * (Number(count) || 1)
+  );
+  const requiredZat = $derived(
+    app.depositRequiredZat || (payoutTotalZat + feeReserveTotalZat)
+  );
+  const cleanDepositAmount = $derived(formatZatToZec(requiredZat));
+  const cleanPayoutAmount = $derived(formatZatToZec(payoutTotalZat));
+  const cleanFeeAmount = $derived(formatZatToZec(feeReserveTotalZat));
+
+  const zip321Uri = $derived(
+    app.depositAddress
+      ? `zcash:${app.depositAddress}?amount=${cleanDepositAmount}&message=${encodeURIComponent('Zool Pool ' + (app.backendRoom?.id || '').slice(0, 8))}`
+      : ''
+  );
+
+  async function handleFrostSetup() {
+    frostBusy = true;
+    try {
+      const res = await setupBackendFrost();
+      app.frostSetup = {
+        min_signers: res.min_signers,
+        max_signers: res.max_signers,
+        group_public_key: res.group_public_key,
+        public_key_package: res.public_key_package,
+        key_packages: res.key_packages,
+        authorized: false,
+      };
+      frostEnabled = true;
+      notify('FROST 2-of-3 threshold treasury initialized!');
+    } catch (e: any) {
+      notify(`FROST setup failed: ${e.message || 'error'}`);
+    } finally {
+      frostBusy = false;
+    }
+  }
+
+  async function handleFrostSign() {
+    if (!app.frostSetup) return;
+    frostBusy = true;
+    try {
+      const msg = `zsplit:authorize-claims:${app.backendRoom?.id || 'demo'}:${count}`;
+      const signers = [app.frostSetup.key_packages[0], app.frostSetup.key_packages[1]];
+      const res = await signBackendFrost(
+        app.frostSetup.group_public_key,
+        msg,
+        signers,
+        app.frostSetup.public_key_package
+      );
+      if (res.verified) {
+        app.frostSetup.authorized = true;
+        app.frostSetup.signature_hex = res.signature_hex;
+        notify('FROST 2-of-3 threshold signature verified!');
+      }
+    } catch (e: any) {
+      notify(`FROST signing error: ${e.message || 'error'}`);
+    } finally {
+      frostBusy = false;
+    }
+  }
+
+  onMount(() => {
+    if (fund && app.backendRoom?.id) {
+      void checkDepositStatus();
+      pollInterval = setInterval(async () => {
+        if (!app.room.funded) {
+          await checkDepositStatus();
+        }
+      }, 3500);
+    }
+  });
+
+  onDestroy(() => {
+    if (pollInterval) clearInterval(pollInterval);
+  });
+
+  async function refreshDeposit() {
+    checking = true;
+    const res = await checkDepositStatus();
+    checking = false;
+    if (res && res.confirmed_zat >= app.depositRequiredZat && app.depositRequiredZat > 0) {
+      notify('Shielded deposit confirmed on testnet! You can now mint your tickets.');
+    } else {
+      notify(`Status checked: ${(app.depositConfirmedZat / 100_000_000).toFixed(4)} ZEC confirmed.`);
+    }
+  }
+
+  async function simulateFunding() {
+    checking = true;
+    try {
+      if (app.backendRoom?.id) {
+        const res = await devConfirmBackendDeposit(app.backendRoom.id);
+        app.depositConfirmedZat = res.confirmed_zat;
+        app.room.funded = true;
+        saveRoom();
+        notify('Testnet deposit confirmed on backend! Ready to mint claim tickets.');
+      } else {
+        app.depositConfirmedZat = app.depositRequiredZat || 5_100_000;
+        app.room.funded = true;
+        saveRoom();
+        notify('Testnet deposit confirmed locally. Ready to mint claim tickets.');
+      }
+    } catch (e: any) {
+      notify(`Confirmation failed: ${e.message}`);
+    } finally {
+      checking = false;
+    }
+  }
+
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     error = '';
-    if (!name.trim()) {
-      error = 'Give your room a name so people know who paid them.';
-      document.getElementById('room-name')?.focus();
-      return;
-    }
-    if (
-      !Number.isInteger(Number(count)) ||
-      count < 1 ||
-      count > 100 ||
-      amount < 0.01 ||
-      amount > 1000
-    ) {
-      error = 'Use 1–100 claims and an amount between 0.01 and 1,000 ZEC.';
-      return;
-    }
-    const values = {
-      name: name.trim(),
-      count: Number(count),
-      amount: Number(amount),
-      expiry: Number(expiry),
-      split,
-      giftCards,
-    };
     if (!fund) {
-      app.room = { ...app.room, ...values, claimed: [], gifts: [], closed: false, funded: false };
-      saveRoom();
-      await goto('/room/fund');
-    } else {
+      if (!name.trim()) {
+        error = 'Give your room a name so people know who paid them.';
+        document.getElementById('room-name')?.focus();
+        return;
+      }
+      if (
+        !Number.isInteger(Number(count)) ||
+        count < 1 ||
+        count > 100 ||
+        amount < 0.0001 ||
+        amount > 1000
+      ) {
+        error = 'Use 1–100 claims and an amount between 0.0001 and 1,000 ZEC.';
+        return;
+      }
+      const values = {
+        name: name.trim(),
+        count: Number(count),
+        amount: Number(amount),
+        expiry: Number(expiry),
+        split,
+        giftCards,
+      };
+
       busy = true;
-      await new Promise((r) => setTimeout(r, 850));
-      createRoom(values);
-      notify('Demo pool funded. Your one-time links are ready.');
-      await goto('/room/claims');
-      busy = false;
+      try {
+        await createRealRoom(values);
+        await goto('/room/fund');
+      } catch (err: any) {
+        error = err.message || 'Failed to create room on backend';
+      } finally {
+        busy = false;
+      }
+    } else {
+      // In fund screen: mint claim tickets
+      busy = true;
+      try {
+        if (app.backendRoom?.id) {
+          await mintClaims();
+          notify('50 unique shielded claim tickets minted on Zcash backend!');
+        } else {
+          notify('Demo pool funded. Your one-time links are ready.');
+        }
+        await goto('/room/claims');
+      } catch (err: any) {
+        error = err.message || 'Failed to mint claims from backend';
+      } finally {
+        busy = false;
+      }
     }
   }
+
   $effect(() => {
     if (app.ready && !name && (fund || !app.room.funded)) {
       name = app.room.name;
@@ -69,25 +218,119 @@
   });
 </script>
 
-<svelte:head><title>{fund ? 'Fund your room' : 'Set up the room'} — Z-Split</title></svelte:head>
+<svelte:head><title>{fund ? 'Fund your room' : 'Set up the room'} — Zool</title></svelte:head>
 <main id="main" class="workspace setup-page" use:enter>
   <form class="setup-grid" onsubmit={submit}>
     <section class="setup-fields">
       <p class="hand intro">
-        {fund ? 'a little pool. a whole room of possibilities.' : 'first, name it and size it'}
+        {fund ? 'shielded pool ready. fund it from your Zingo wallet.' : 'first, name it and size it'}
       </p>
       <h1>{fund ? 'FUND THE ROOM.' : 'SET UP THE ROOM.'}</h1>
       {#if fund}
         <div class="fund-panel">
-          <Art kind="envelope" />
-          <h2>ONE POOL.<br />EVERYONE GETS PAID.</h2>
-          <p class="hand">
-            Your room is ready. Add {total.toFixed(2)} ZEC to make {count} one-time claim links.
-          </p>
-          <div class="demo-note">
-            <span class="check-mini"><Icon name="check" size={15} /></span><span
-              >You're in a demo. No wallet connection or real funds needed.</span
-            >
+          <div class="fund-header">
+            <h2>COORDINATOR SHIELDED POOL</h2>
+            <p class="hand">
+              Send <strong>{cleanDepositAmount} TAZ</strong> from your <strong>Zingo / Zodl wallet</strong> to fund this room's {count} one-time claim links.
+            </p>
+          </div>
+
+          {#if app.depositAddress}
+            <div class="qr-deposit-box">
+              <QR value={zip321Uri} label="Coordinator Zcash Testnet Shielded Deposit QR" />
+              <div class="deposit-meta">
+                <span class="deposit-tag">ZCASH TESTNET (ORCHARD / IRONWOOD)</span>
+                <p class="hand deposit-instructions">
+                  📱 <strong>In Zingo / Zodl Wallet:</strong> Tap Send → Scan QR code (clean ZIP-321 amount).
+                </p>
+                <div class="addr-box">
+                  <code>{app.depositAddress}</code>
+                  <button
+                    type="button"
+                    class="pill copy-btn"
+                    onclick={() => copyText(app.depositAddress, 'Deposit address copied!')}
+                  >
+                    Copy Address
+                  </button>
+                </div>
+              </div>
+            </div>
+          {/if}
+
+          <div class="live-status-card" class:funded={app.room.funded}>
+            <div class="status-indicator">
+              <span class="status-dot" class:online={app.room.funded}></span>
+              <strong>{app.room.funded ? '✓ POOL FUNDED & CONFIRMED' : '⏳ Awaiting Shielded Deposit on Chain'}</strong>
+            </div>
+            <div class="status-metrics">
+              <div>
+                <span class="muted">Confirmed:</span>
+                <strong>{formatZatToZec(app.depositConfirmedZat)} TAZ</strong>
+              </div>
+              <div>
+                <span class="muted">Required:</span>
+                <strong>{cleanDepositAmount} TAZ</strong>
+              </div>
+            </div>
+            <div class="status-actions">
+              <button type="button" class="text-link" disabled={checking} onclick={refreshDeposit}>
+                {checking ? 'Checking…' : '↻ Refresh Status'}
+              </button>
+              {#if !app.room.funded}
+                <button type="button" class="text-link dev-shortcut" onclick={simulateFunding}>
+                  ⚡ Confirm Instantly (Dev)
+                </button>
+              {/if}
+            </div>
+          </div>
+
+          <div class="frost-threshold-card" style="margin-top: 1rem; padding: 1rem; background: var(--bg-surface, #1e1e24); border: 1px solid var(--border-color, #333); border-radius: 8px;">
+            <div class="frost-header" style="display: flex; align-items: center; justify-content: space-between;">
+              <span class="deposit-tag">🛡️ ZCASH FOUNDATION FROST</span>
+              <strong>2-of-3 Threshold Signing</strong>
+            </div>
+            <p class="hand" style="font-size: 0.85rem; margin: 0.5rem 0;">
+              Distribute coordinator keys across 3 treasury co-organizers. Requires 2 valid Schnorr signature shares to authorize batch payout.
+            </p>
+            {#if !app.frostSetup}
+              <button
+                type="button"
+                class="pill"
+                style="margin-top: 0.5rem;"
+                disabled={frostBusy}
+                onclick={handleFrostSetup}
+              >
+                {frostBusy ? 'Initializing FROST…' : '🛡️ Enable 2-of-3 FROST Treasury'}
+              </button>
+            {:else}
+              <div class="frost-details" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div>
+                  <span class="muted">Group Public Key:</span><br/>
+                  <code style="word-break: break-all; font-size: 0.75rem;">{app.frostSetup.group_public_key}</code>
+                </div>
+                <div>
+                  <span class="muted">Signer Threshold:</span>
+                  <strong>{app.frostSetup.min_signers} of {app.frostSetup.max_signers} signers required</strong>
+                </div>
+                <div>
+                  <span class="muted">Status:</span>
+                  <strong style="color: {app.frostSetup.authorized ? '#2ecc71' : '#f39c12'}">
+                    {app.frostSetup.authorized ? '✓ 2-of-3 FROST Signature Verified' : '⏳ Pending 2-of-3 Co-signer Authorization'}
+                  </strong>
+                </div>
+                {#if !app.frostSetup.authorized}
+                  <button
+                    type="button"
+                    class="pill"
+                    style="margin-top: 0.25rem;"
+                    disabled={frostBusy}
+                    onclick={handleFrostSign}
+                  >
+                    {frostBusy ? 'Aggregating Shares…' : '✍️ Co-sign Batch with 2 Signers'}
+                  </button>
+                {/if}
+              </div>
+            {/if}
           </div>
         </div>
         <button type="button" class="text-link" onclick={() => goto('/room/new')}
@@ -118,9 +361,8 @@
                 type="number"
                 min="1"
                 max="100"
-                step="1"
                 bind:value={count}
-                required
+                aria-label="Number of claims"
               /><button
                 type="button"
                 aria-label="One more claim"
@@ -130,52 +372,71 @@
             </div>
           </div>
           <div class="field">
-            <label for="claim-amount">ZEC PER CLAIM</label>
-            <div class="amount-input">
-              <input
+            <label for="claim-amount">AMOUNT PER CLAIM (ZEC)</label>
+            <div class="stepper">
+              <button
+                type="button"
+                aria-label="Decrease amount"
+                disabled={amount <= 0.001}
+                onclick={() => (amount = Math.max(0.001, Number((amount - 0.001).toFixed(4))))}>−</button
+              ><input
                 id="claim-amount"
                 type="number"
-                step="0.01"
-                min="0.01"
+                step="0.001"
+                min="0.0001"
                 max="1000"
                 bind:value={amount}
-                required
-              /><span>ZEC</span>
+                aria-label="Amount in ZEC per claim"
+              /><button
+                type="button"
+                aria-label="Increase amount"
+                disabled={amount >= 1000}
+                onclick={() => (amount = Math.min(1000, Number((amount + 0.001).toFixed(4))))}>+</button
+              >
             </div>
           </div>
         </div>
-        <fieldset class="split-field">
-          <legend>SPLIT</legend>
-          <div class="split-buttons">
-            <button
-              type="button"
-              class="pill"
-              class:selected={split === 'equal'}
-              aria-pressed={split === 'equal'}
-              onclick={() => (split = 'equal')}>SAME FOR EVERYONE</button
+        <div class="field-row">
+          <div class="field">
+            <label for="claim-expiry">EXPIRATION</label>
+            <div class="segmented" role="radiogroup" aria-label="Expiration days">
+              {#each [1, 3, 7, 14, 30] as days}<button
+                  type="button"
+                  role="radio"
+                  aria-checked={expiry === days}
+                  class:active={expiry === days}
+                  onclick={() => (expiry = days)}>{days}d</button
+                >{/each}
+            </div>
+          </div>
+          <div class="field">
+            <label for="claim-split">SPLIT METHOD</label>
+            <div class="segmented" role="radiogroup" aria-label="Split method">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={split === 'equal'}
+                class:active={split === 'equal'}
+                onclick={() => (split = 'equal')}>EQUAL</button
+              ><button
+                type="button"
+                role="radio"
+                aria-checked={split === 'tiers'}
+                class:active={split === 'tiers'}
+                onclick={() => (split = 'tiers')}>TIERED</button
+              >
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <label class="switch-row" for="gift-cards"
+            ><span
+              ><strong>ALLOW BITREFILL GIFT CARDS</strong><span class="muted"
+                >Recipients can spend directly without holding crypto.</span
+              ></span
             ><button
               type="button"
-              class="pill"
-              class:selected={split === 'tiers'}
-              aria-pressed={split === 'tiers'}
-              onclick={() => (split = 'tiers')}>TIERS: 1ST, 2ND,<br />3RD</button
-            >
-          </div>
-          {#if split === 'tiers'}<p class="field-note hand">
-              1st gets 3×. 2nd and 3rd get 2×. Everyone else gets the base amount.
-            </p>{/if}
-        </fieldset>
-        <div class="expiry-row">
-          <div class="field">
-            <label for="expiry">LINKS EXPIRE AFTER</label><select id="expiry" bind:value={expiry}
-              >{#each [1, 3, 7, 14, 30] as day}<option value={day}
-                  >{day} {day === 1 ? 'day' : 'days'}</option
-                >{/each}</select
-            >
-          </div>
-          <label class="gift-toggle"
-            ><span class="hand">Let people cash out to a gift card</span><button
-              type="button"
+              id="gift-cards"
               role="switch"
               aria-label="Allow gift card payouts"
               aria-checked={giftCards}
@@ -202,7 +463,7 @@
           </div>
           <div>
             <dt>{split === 'equal' ? 'Per claim' : 'Base claim'}</dt>
-            <dd>{(Number(amount) || 0).toFixed(2)} ZEC</dd>
+            <dd>{(Number(amount) || 0).toFixed(4)} ZEC</dd>
           </div>
           <div>
             <dt>Expires</dt>
@@ -211,14 +472,12 @@
         </dl>
         <div class="dotted-line"></div>
         <p class="hand deposit-label">You deposit</p>
-        <div class="deposit-total">{total.toFixed(2)} ZEC</div>
+        <div class="deposit-total">{cleanDepositAmount} TAZ</div>
         <p class="muted hand fee-note">
-          {fund
-            ? 'mock funding. real privacy-minded design.'
-            : 'plus network fees, worked out when you fund'}
+          {cleanPayoutAmount} TAZ payouts + {cleanFeeAmount} TAZ network fee reserve
         </p>
-        <Action type="submit" disabled={busy}
-          >{busy ? 'Making your links…' : fund ? 'Fund demo pool' : 'Fund and make links'}</Action
+        <Action type="submit" disabled={busy || (fund && !app.room.funded)}
+          >{busy ? 'Processing…' : fund ? (app.room.funded ? 'MINT CLAIM TICKETS →' : 'Awaiting ZEC Deposit…') : 'Generate Coordinator Address →'}</Action
         >
       </div>
       <ul class="promises hand">
@@ -238,3 +497,82 @@
     </aside>
   </form>
 </main>
+
+<style>
+  .qr-deposit-box {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    background: #fbfbf9;
+    border: 2px solid #000;
+    padding: 1.25rem;
+    border-radius: 8px;
+    margin: 1.25rem 0;
+  }
+  .deposit-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow: hidden;
+  }
+  .deposit-tag {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #4a5568;
+  }
+  .addr-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .addr-box code {
+    font-family: monospace;
+    font-size: 0.75rem;
+    background: #edf2f7;
+    padding: 0.4rem;
+    border-radius: 4px;
+    word-break: break-all;
+  }
+  .live-status-card {
+    border: 2px dashed #718096;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 1rem;
+  }
+  .live-status-card.funded {
+    border: 2px solid #38a169;
+    background: #f0fff4;
+  }
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #e53e3e;
+  }
+  .status-dot.online {
+    background: #38a169;
+  }
+  .status-metrics {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  .status-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  .dev-shortcut {
+    color: #b7791f;
+    font-weight: 700;
+  }
+</style>

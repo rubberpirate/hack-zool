@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/domain", "crates/claims", "crates/store", "crates/zcash", "apps/api", "apps/worker", "tests"]
+members = ["crates/domain", "crates/claims", "crates/store", "crates/zcash", "crates/frost", "apps/api", "apps/worker", "tests"]
 resolver = "2"
 
 [workspace.package]
@@ -15,6 +15,9 @@ zsplit-domain = { path = "crates/domain" }
 zsplit-claims = { path = "crates/claims" }
 zsplit-store = { path = "crates/store" }
 zsplit-zcash = { path = "crates/zcash" }
+zsplit-frost = { path = "crates/frost" }
+frost-ed25519 = { version = "3.0.0", features = ["serde"] }
+frost-core = { version = "3.0.0", features = ["serde"] }
 async-trait = "0.1"
 axum = { version = "0.8", features = ["macros"] }
 tokio = { version = "1", features = ["full"] }

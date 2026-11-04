@@ -23,7 +23,7 @@
 />
 <header class="site-header">
   <div class="brand-group">
-    <a class="brand" href="/" aria-label="Z-Split home"
+    <a class="brand" href="/" aria-label="Zool home"
       ><svg viewBox="0 0 60 65" aria-hidden="true"
         ><path
           d="M13 1h35q11 0 11 12v29q0 12-12 12H34L27 65l-7-11h-7Q1 54 1 42V13Q1 1 13 1Z"

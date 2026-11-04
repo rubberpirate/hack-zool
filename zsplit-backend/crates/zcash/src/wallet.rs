@@ -239,11 +239,11 @@ impl NativeWallet {
         T: Send + 'static,
         F: FnOnce(&mut State) -> Result<T, DomainError> + Send + 'static,
     {
-        let permit = self
-            .gate
-            .clone()
-            .try_acquire_owned()
-            .map_err(|_| DomainError::Unavailable)?;
+        let permit =
+            tokio::time::timeout(Duration::from_secs(15), self.gate.clone().acquire_owned())
+                .await
+                .map_err(|_| DomainError::Unavailable)?
+                .map_err(|_| DomainError::Unavailable)?;
         let state = self.state.clone();
         let lock = self._lock.clone();
         tokio::task::spawn_blocking(move || {
@@ -328,33 +328,26 @@ impl State {
 impl PayoutEngine for NativeWallet {
     async fn deposit_address(&self, room: RoomId) -> Result<DepositAddress, DomainError> {
         let mut client = self.client.clone();
-        let handle = tokio::runtime::Handle::current();
+        let height = client
+            .get_latest_block(ChainSpec {})
+            .await
+            .map_err(sdk_error)?
+            .into_inner()
+            .height;
+        let tree = client
+            .get_tree_state(BlockId {
+                height,
+                hash: vec![],
+            })
+            .await
+            .map_err(sdk_error)?
+            .into_inner();
+        let birthday = AccountBirthday::from_treestate(tree, None).map_err(sdk_error)?;
+
         self.run(move |s| {
             let id = match s.account(room) {
                 Ok(id) => id,
                 Err(DomainError::NotFound) => {
-                    let birthday = handle.block_on(async {
-                        let height = match s.config.birthday_height {
-                            Some(h) => u64::from(h - 1),
-                            None => {
-                                client
-                                    .get_latest_block(ChainSpec {})
-                                    .await
-                                    .map_err(sdk_error)?
-                                    .into_inner()
-                                    .height
-                            }
-                        };
-                        let tree = client
-                            .get_tree_state(BlockId {
-                                height,
-                                hash: vec![],
-                            })
-                            .await
-                            .map_err(sdk_error)?
-                            .into_inner();
-                        AccountBirthday::from_treestate(tree, None).map_err(sdk_error)
-                    })?;
                     s.db.create_account(
                         &format!("zsplit:{room}"),
                         &s.seed,
@@ -397,7 +390,10 @@ impl PayoutEngine for NativeWallet {
                     .map_err(sdk_error)?
                     .into_inner();
                 validate_chain_info(&info)?;
-                zcash_client_backend::sync::run(
+                if s.db.get_account_ids().map_err(sdk_error)?.is_empty() {
+                    return Ok(());
+                }
+                if let Err(e) = zcash_client_backend::sync::run(
                     &mut client,
                     &consensus::Network::TestNetwork,
                     &MemoryCache::default(),
@@ -405,7 +401,10 @@ impl PayoutEngine for NativeWallet {
                     100,
                 )
                 .await
-                .map_err(sdk_error)?;
+                {
+                    tracing::warn!(code = "sync_run_error", error = ?e);
+                    return Err(sdk_error(e));
+                }
                 // SDK sync leaves complete transaction enhancement to the application.
                 for request in s.db.transaction_data_requests().map_err(sdk_error)? {
                     let (id, enhance) = match request {
@@ -437,21 +436,28 @@ impl PayoutEngine for NativeWallet {
                                             .ok_or(DomainError::Unavailable)?
                                     }
                                 };
-                                let tx = Transaction::read(
+                                let tx = match Transaction::read(
                                     raw.data.as_slice(),
                                     BranchId::for_height(&consensus::Network::TestNetwork, height),
-                                )
-                                .map_err(sdk_error)?;
+                                ) {
+                                    Ok(tx) => tx,
+                                    Err(e) => {
+                                        tracing::warn!(code = "tx_read_error", error = ?e, txid = %id, height = ?height);
+                                        return Err(sdk_error(e));
+                                    }
+                                };
                                 if tx.txid() != id {
                                     return Err(DomainError::Unavailable);
                                 }
-                                wallet::decrypt_and_store_transaction(
+                                if let Err(e) = wallet::decrypt_and_store_transaction(
                                     &consensus::Network::TestNetwork,
                                     &mut s.db,
                                     &tx,
                                     None,
-                                )
-                                .map_err(sdk_error)?;
+                                ) {
+                                    tracing::warn!(code = "decrypt_and_store_error", error = ?e, txid = %id);
+                                    return Err(sdk_error(e));
+                                }
                             }
                             s.db.set_transaction_status(id, status).map_err(sdk_error)?;
                         }
@@ -459,7 +465,10 @@ impl PayoutEngine for NativeWallet {
                             s.db.set_transaction_status(id, TransactionStatus::TxidNotRecognized)
                                 .map_err(sdk_error)?;
                         }
-                        Err(_) => return Err(DomainError::Unavailable),
+                        Err(e) => {
+                            tracing::warn!(code = "get_tx_error", error = ?e, txid = %id);
+                            return Err(DomainError::Unavailable);
+                        }
                     }
                 }
                 Ok::<(), DomainError>(())

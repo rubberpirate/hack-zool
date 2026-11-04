@@ -18,5 +18,15 @@ async fn main() -> anyhow::Result<()> {
         "chain={} height={} estimated_height={} branch={}",
         info.chain_name, info.block_height, info.estimated_height, info.consensus_branch_id
     );
+    let tree = client
+        .get_tree_state(zcash_client_backend::proto::service::BlockId {
+            height: info.block_height,
+            hash: vec![],
+        })
+        .await?
+        .into_inner();
+    println!("tree height={}", tree.height);
+    let birthday = zcash_client_backend::data_api::AccountBirthday::from_treestate(tree, None)?;
+    println!("birthday height={:?}", birthday.height());
     Ok(())
 }

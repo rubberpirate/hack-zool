@@ -10,7 +10,8 @@ pub type PayoutId = Uuid;
 pub type OrganizerId = Uuid;
 pub const MAX_ZATS: u64 = 2_100_000_000_000_000;
 pub const MAX_TICKETS: usize = 50;
-pub const DEFAULT_FEE_RESERVE: u64 = 100_000;
+/// Default marginal transaction fee reserve per ticket (10,000 Zatoshis = 0.0001 ZEC, ZIP-317 standard minimum).
+pub const DEFAULT_FEE_RESERVE: u64 = 10_000;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
