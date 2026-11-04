@@ -21,26 +21,29 @@
   font-display: swap;
 }
 @theme {
-  --color-accent: #C3B8EE;
-  --color-accent-hover: #B4A7E5;
+  --color-accent: #C8BFF0;
+  --color-accent-hover: #B8ACE6;
   --color-lime: var(--color-accent);
-  --color-mint: #68bf95;
-  --color-ink: #050604;
+  --color-mint: #7ecba6;
+  --color-ink: #1e201d;
   --font-display: Anton, sans-serif;
   --font-hand: 'Patrick Hand', cursive;
   --font-sans: 'DM Sans', sans-serif;
 }
 :root {
-  --accent: #C3B8EE;
-  --accent-hover: #B4A7E5;
-  --accent-soft: rgba(195, 184, 238, 0.18);
-  --accent-border: rgba(195, 184, 238, 0.4);
-  --on-accent: #050604;
+  --accent: #C8BFF0;
+  --accent-hover: #B8ACE6;
+  --accent-soft: rgba(200, 191, 240, 0.22);
+  --accent-border: rgba(184, 172, 230, 0.45);
+  --on-accent: #1e201d;
   --lime: var(--accent);
-  --mint: #68bf95;
-  --yellow: #f2e97b;
-  --ink: #050604;
-  --muted: #5e6059;
+  --mint: #7ecba6;
+  --yellow: #f7d54a;
+  --terracotta: #b65836;
+  --terracotta-soft: rgba(182, 88, 54, 0.15);
+  --terracotta-border: rgba(182, 88, 54, 0.35);
+  --ink: #1e201d;
+  --muted: #6b6e65;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --dur-fast: 150ms;
@@ -62,8 +65,9 @@
 }
 body {
   margin: 0;
-  padding: 0.875rem;
+  padding: 0;
   min-width: 20rem;
+  background: #fff;
 }
 button,
 input,
@@ -164,10 +168,11 @@ fieldset {
 }
 .paper {
   background: #fff;
-  min-height: calc(100svh - 1.75rem);
-  border-radius: 1rem;
+  min-height: 100svh;
+  border-radius: 0;
   position: relative;
   overflow: clip;
+  width: 100%;
 }
 .site-header {
   height: 6.75rem;
@@ -950,7 +955,8 @@ input::placeholder {
   left: 65%;
 }
 .closed-art > span {
-  background: var(--yellow);
+  background: var(--terracotta-soft);
+  color: var(--terracotta);
 }
 .sheet-footer {
   display: flex;
@@ -1066,7 +1072,7 @@ input::placeholder {
   padding-bottom: 0.3125rem;
 }
 .remaining-card {
-  background: var(--yellow);
+  background: var(--terracotta-soft);
   border: 0.125rem solid black;
   border-radius: 1.125rem;
   display: flex;
@@ -1109,13 +1115,15 @@ input::placeholder {
 }
 .recipient {
   width: 100%;
-  max-width: 86rem;
-  margin: 0 auto;
-  min-height: calc(100svh - 1.75rem);
+  max-width: 100%;
+  margin: 0;
+  min-height: 100svh;
 }
 .recipient .site-header {
   height: 6.75rem;
-  padding: 1.75rem 2.375rem;
+  padding: 1.75rem clamp(1.5rem, 4vw, 3.5rem);
+  max-width: 86rem;
+  margin: 0 auto;
 }
 .recipient .brand {
   width: 3.625rem;
@@ -1127,12 +1135,12 @@ input::placeholder {
   font-size: 0.8125rem;
 }
 .claim-page {
-  padding: 0 2.5rem 2.5rem;
+  padding: 0 clamp(1.5rem, 4vw, 3.5rem) 2.5rem;
   display: flex;
   flex-direction: column;
-  min-height: calc(100svh - 9.1875rem);
+  min-height: calc(100svh - 6.75rem);
   width: 100%;
-  max-width: 58rem;
+  max-width: 72rem;
   margin: 0 auto;
 }
 .claim-page h1 {
@@ -1438,7 +1446,7 @@ input::placeholder {
   width: 100%;
   grid-template-columns: 1fr 1.5625rem;
   text-align: left;
-  background: var(--yellow);
+  background: var(--terracotta-soft);
   gap: 0.4375rem;
 }
 .gift-code .label {

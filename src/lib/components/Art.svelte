@@ -106,7 +106,7 @@
   {:else if kind === 'cloud'}
     <path
       d="M29 69C20 45 49 22 69 40c28-30 61-7 59 17 34-1 40 42 9 45H26C0 102 4 72 29 69Z"
-      fill="var(--yellow)"
+      fill="var(--terracotta-soft)"
       stroke="currentColor"
       stroke-width="4"
     /><path

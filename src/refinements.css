@@ -344,7 +344,7 @@
   height: 12rem;
 }
 .story-step:nth-child(2) .step-visual {
-  background: var(--yellow);
+  background: var(--terracotta-soft);
 }
 .story-step:nth-child(3) .step-visual {
   background: var(--accent);
@@ -402,7 +402,7 @@
   background: var(--accent);
 }
 .gift-feature {
-  background: var(--yellow);
+  background: var(--terracotta-soft);
 }
 .payout-feature h3 {
   font-size: 2.5rem;
@@ -502,7 +502,7 @@
 }
 .occasion-list span:nth-child(even) {
   transform: rotate(2deg);
-  background: var(--yellow);
+  background: var(--terracotta-soft);
 }
 .occasion-list span:last-child {
   background: var(--mint);
@@ -717,7 +717,7 @@
   margin-top: 2rem;
 }
 .room-summary {
-  background: var(--yellow);
+  background: var(--terracotta-soft);
   padding: 2rem;
   border-left: 2px solid black;
   display: flex;
@@ -1732,7 +1732,8 @@
   padding: 0.45rem 0.5rem;
   align-self: flex-start;
   margin-top: 0.25rem;
-  background: var(--yellow);
+  background: var(--terracotta-soft);
+  color: var(--terracotta);
 }
 
 /* Results & Distribution Styling */
@@ -1806,15 +1807,15 @@
   color: var(--ink);
 }
 .rank-badge.gold {
-  color: #a06e00;
+  color: var(--terracotta);
 }
 .req-tag {
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.05em;
-  background: var(--yellow);
-  color: black;
-  padding: 0.1rem 0.4rem;
+  background: var(--terracotta);
+  color: #fff;
+  padding: 0.1rem 0.45rem;
   border-radius: 999px;
   border: 1px solid black;
 }
@@ -1987,7 +1988,7 @@
   color: var(--ink);
 }
 .rank-tag.gold {
-  color: #a06e00;
+  color: var(--terracotta);
 }
 .dispatch-prize {
   font-size: 0.95rem;
@@ -2051,7 +2052,25 @@
   max-height: 8rem;
 }
 
-/* Mobile & Touch Native Polish (iOS + Android) */
+/* Full Screen & Mobile Frames Polish (iOS + Android) */
+body {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: #fff !important;
+  min-height: 100svh;
+}
+.paper {
+  border-radius: 0 !important;
+  min-height: 100svh !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+.recipient {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100svh !important;
+}
+
 @media (max-width: 640px) {
   body {
     -webkit-tap-highlight-color: transparent;
@@ -2059,6 +2078,43 @@
   }
   input, select, textarea, button {
     font-size: 16px !important; /* Prevents auto-zoom in iOS Safari */
+  }
+  .site-header {
+    padding: 1rem 1.25rem !important;
+    height: auto !important;
+    min-height: 4.5rem;
+  }
+  .recipient .site-header {
+    padding: 1rem 1.25rem !important;
+    height: auto !important;
+    min-height: 4.5rem;
+  }
+  .claim-page {
+    padding: 0 1.25rem 1.75rem !important;
+    min-height: calc(100svh - 4.5rem) !important;
+  }
+  .claim-hero-art {
+    height: clamp(10rem, 28vh, 14rem) !important;
+    margin: 0 0 1.25rem !important;
+    padding: 0 !important;
+  }
+  .claim-page h1 {
+    font-size: clamp(2.8rem, 13vw, 4.2rem) !important;
+  }
+  .claim-kicker {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .claim-description {
+    font-size: 1.15rem !important;
+    line-height: 1.35 !important;
+  }
+  .claim-bottom {
+    padding-top: 1.25rem !important;
+  }
+  .recipient-foot p {
+    font-size: 1.1rem !important;
+    white-space: normal !important;
   }
   .setup-grid {
     grid-template-columns: 1fr;

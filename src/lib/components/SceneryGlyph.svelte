@@ -54,7 +54,7 @@
     aria-hidden="true"
     ><path
       d="M68 58C20 6 5 75 49 78 1 97 49 139 67 96c0 50 66 23 35-10 49 16 53-49 9-42 12-48-53-49-43 14Z"
-    /><circle cx="79" cy="75" r="18" fill="var(--yellow)" /></svg
+    /><circle cx="79" cy="75" r="18" fill="var(--terracotta-soft)" stroke="currentColor" stroke-width="2" /></svg
   >
 {:else}<svg viewBox="0 0 120 120" aria-hidden="true"
     ><circle cx="60" cy="60" r="56" fill="white" stroke="black" stroke-width="3" /><path
