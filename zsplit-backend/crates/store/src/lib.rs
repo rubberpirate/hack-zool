@@ -218,17 +218,17 @@ impl Store {
         if room.spendable_zat - room.reserved_zat < reserve {
             return Err(DomainError::InsufficientFunds);
         }
-        for claim in claims {
-            sqlx::query("INSERT INTO claims(id,room_id,amount_zat,fee_budget_zat,token_digest,expires_at) VALUES($1,$2,$3,$4,$5,$6)").bind(claim.id).bind(room_id).bind(amount(claim.amount_zat)?).bind(room.fee_reserve_zat).bind(claim.token_digest.as_slice()).bind(room.expires_at).execute(&mut *tx).await.map_err(db)?;
-            ledger(
-                &mut tx,
-                room_id,
-                Some(claim.id),
-                "reserve",
-                amount(claim.amount_zat)? + room.fee_reserve_zat,
-            )
-            .await?;
-        }
+        // Bound arrays reduce 100 round trips for 50 tickets to two INSERTs without changing atomicity.
+        let ids: Vec<Uuid> = claims.iter().map(|c| c.id).collect();
+        let values: Vec<i64> = claims
+            .iter()
+            .map(|c| amount(c.amount_zat))
+            .collect::<Result<_, _>>()?;
+        let digests: Vec<Vec<u8>> = claims.iter().map(|c| c.token_digest.to_vec()).collect();
+        sqlx::query("INSERT INTO claims(id,room_id,amount_zat,fee_budget_zat,token_digest,expires_at) SELECT c.id,$4,c.amount_zat,$5,c.token_digest,$6 FROM UNNEST($1::uuid[],$2::bigint[],$3::bytea[]) AS c(id,amount_zat,token_digest)")
+          .bind(&ids).bind(&values).bind(&digests).bind(room_id).bind(room.fee_reserve_zat).bind(room.expires_at).execute(&mut *tx).await.map_err(db)?;
+        sqlx::query("INSERT INTO ledger_entries(room_id,claim_id,kind,amount_zat) SELECT $1,c.id,'reserve',c.amount_zat+$4 FROM UNNEST($2::uuid[],$3::bigint[]) AS c(id,amount_zat)")
+          .bind(room_id).bind(&ids).bind(&values).bind(room.fee_reserve_zat).execute(&mut *tx).await.map_err(db)?;
         sqlx::query("UPDATE rooms SET claims_issued=true,reserved_zat=reserved_zat+$2 WHERE id=$1")
             .bind(room_id)
             .bind(reserve)
