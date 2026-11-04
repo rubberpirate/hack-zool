@@ -1,0 +1,3411 @@
+@import 'tailwindcss' source('.');
+@font-face {
+  font-family: Anton;
+  src: url('/fonts/anton.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Patrick Hand';
+  src: url('/fonts/patrick-hand.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans.woff2') format('woff2');
+  font-weight: 500 800;
+  font-style: normal;
+  font-display: swap;
+}
+@theme {
+  --color-lime: #d7fa3c;
+  --color-mint: #68bf95;
+  --color-ink: #050604;
+  --font-display: Anton, sans-serif;
+  --font-hand: 'Patrick Hand', cursive;
+  --font-sans: 'DM Sans', sans-serif;
+}
+:root {
+  --lime: #d7fa3c;
+  --mint: #68bf95;
+  --yellow: #f2e97b;
+  --ink: #050604;
+  --muted: #5e6059;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--ink);
+  background: #232420;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scrollbar-color: var(--ink) #eeeeea;
+  caret-color: var(--ink);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0.875rem;
+  min-width: 20rem;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a {
+  touch-action: manipulation;
+}
+button {
+  cursor: pointer;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+button {
+  background: none;
+}
+::selection {
+  background: var(--lime);
+  color: black;
+}
+:focus-visible {
+  outline: 0.1875rem solid #43876a;
+  outline-offset: 0.3125rem;
+}
+input:focus-visible,
+select:focus-visible {
+  outline-offset: 0.1875rem;
+}
+h1,
+h2,
+p,
+ul,
+dl,
+dd {
+  margin: 0;
+}
+h1,
+h2 {
+  font-family: Anton, sans-serif;
+  font-weight: 400;
+}
+h1 {
+  font-size: clamp(2.875rem, 5.35vw, 5.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+p {
+  line-height: 1.35;
+}
+mark {
+  color: inherit;
+  background: var(--lime);
+  border-radius: 0.625rem;
+  padding: 0 0.09em 0.05em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+label,
+.label,
+legend {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+}
+label,
+legend {
+  display: block;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.hand {
+  font-family: 'Patrick Hand', cursive;
+  font-weight: 400;
+}
+.muted {
+  color: var(--muted);
+}
+.paper {
+  background: #fff;
+  min-height: calc(100svh - 1.75rem);
+  border-radius: 1rem;
+  position: relative;
+  overflow: clip;
+}
+.site-header {
+  height: 6.75rem;
+  padding: 1.75rem 2.375rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 20;
+}
+.brand {
+  display: block;
+  width: 3.625rem;
+  height: 4rem;
+  transition: transform 160ms var(--ease-out);
+}
+.brand svg {
+  width: 100%;
+  height: 100%;
+}
+.brand-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.claims-badge {
+  border: 0.125rem solid black;
+  border-radius: 0.4375rem;
+  width: 3.625rem;
+  height: 3.75rem;
+  text-align: center;
+  padding: 0.375rem 0.1875rem;
+}
+.claims-badge strong {
+  font-family: Anton;
+  font-weight: 400;
+  font-size: 1.6875rem;
+  line-height: 1;
+  display: block;
+}
+.claims-badge span {
+  display: block;
+  font-size: 0.5625rem;
+  letter-spacing: 0.04em;
+  font-weight: 800;
+  margin-top: 0.1875rem;
+}
+.pill {
+  border: 0.125rem solid var(--ink);
+  border-radius: 62.4375rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  line-height: 1.1;
+  min-height: 2.875rem;
+  background: white;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  transition:
+    background-color 160ms ease,
+    transform 160ms var(--ease-out);
+}
+.menu-button {
+  min-width: 6rem;
+  min-height: 2.8125rem;
+  padding: 0.8125rem 1.4375rem;
+}
+.menu-wrap {
+  position: relative;
+  z-index: 30;
+}
+.steps {
+  position: absolute;
+  left: 50%;
+  top: 1.75rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.steps a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.375rem;
+  min-height: 2.9375rem;
+  border: 0.125rem solid black;
+  border-radius: 6.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.625rem 1.125rem;
+  line-height: 1.2;
+}
+.steps svg {
+  width: 2.8125rem;
+  height: 1.125rem;
+}
+.steps .current {
+  background: var(--lime);
+}
+.steps .complete {
+  background: var(--mint);
+}
+.menu-panel {
+  position: absolute;
+  right: 0;
+  top: 3.625rem;
+  width: 18.75rem;
+  border: 0.125rem solid black;
+  background: white;
+  border-radius: 1rem;
+  padding: 1.125rem;
+  box-shadow: 0.3125rem 0.5rem 1.25rem #00000018;
+  transform-origin: top right;
+  animation: menu-in 180ms var(--ease-out);
+}
+.menu-panel a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.875rem 0.4375rem;
+  border-bottom: 0.0625rem dashed #b1b1a7;
+}
+.menu-panel p {
+  font-family: 'Patrick Hand';
+  font-size: 1.4375rem;
+  margin: 1.125rem 0.4375rem 0.75rem;
+}
+.demo-tag {
+  font-size: 0.5625rem;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.07em;
+  display: block;
+  margin: 0 0.4375rem 0.25rem;
+}
+.menu-dismiss {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  z-index: 15;
+  cursor: default;
+}
+.action {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  border-radius: 62.4375rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.125rem;
+  position: relative;
+  gap: 1rem;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms ease;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.action.primary {
+  background: var(--lime);
+  border: 0.125rem solid var(--lime);
+}
+.action.secondary {
+  background: white;
+  border: 0.125rem solid black;
+}
+.action-label {
+  padding: 0 1.4375rem;
+  display: block;
+}
+.action.has-cap .action-label {
+  padding-right: 0;
+}
+.action-cap {
+  display: flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: black;
+  color: white;
+  margin: -0.0625rem;
+  flex-shrink: 0;
+  transition: transform 220ms var(--ease-out);
+}
+.action:active,
+.pill:active,
+.circle-button:active {
+  transform: scale(0.97);
+}
+.art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.landing {
+  min-height: calc(100svh - 8.5rem);
+  text-align: center;
+  padding: 1.0625rem 1.875rem 17.1875rem;
+  position: relative;
+  isolation: isolate;
+}
+.hero-intro {
+  font-size: 1.625rem;
+  line-height: 1.25;
+  transform: rotate(-2deg);
+  margin: 0 0 0.9375rem;
+}
+.hero-heading-wrap {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+  z-index: 2;
+}
+.landing h1 {
+  font-size: clamp(4.25rem, 8.6vw, 8.5rem);
+  line-height: 0.99;
+  letter-spacing: -0.028em;
+  white-space: nowrap;
+}
+.zero {
+  display: inline-block;
+  background: var(--lime);
+  padding: 0.3125rem 0.75rem 0.9375rem;
+  border-radius: 1rem;
+  position: relative;
+  margin: 0 0.4375rem -0.9375rem;
+  transform: rotate(0.4deg);
+}
+.hero-copy {
+  font-size: 1.5625rem;
+  line-height: 1.3;
+  margin: 1.3125rem auto 1.625rem;
+  max-width: 48.75rem;
+}
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.hero-cloud {
+  position: absolute;
+  width: 6.875rem;
+  height: 6.25rem;
+  top: 2.6875rem;
+  left: 0.25rem;
+  transform: translateX(-8%) rotate(-5deg);
+}
+.hero-badge {
+  position: absolute;
+  width: 9rem;
+  height: 9rem;
+  right: -3rem;
+  bottom: -2.75rem;
+  transform: rotate(14deg);
+}
+.scenery {
+  position: absolute;
+  bottom: -2.6875rem;
+  height: 14.375rem;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+.scenery > * {
+  position: absolute;
+  bottom: 0;
+}
+.scene-coin {
+  width: 9.375rem;
+  height: 9.375rem;
+  bottom: 0.375rem;
+}
+.scene-coin.first {
+  left: 0;
+  transform: rotate(9deg);
+}
+.scene-qr {
+  width: 8.75rem;
+  height: 10.625rem;
+  bottom: -0.125rem;
+}
+.scene-qr.first {
+  left: 13%;
+  transform: rotate(9deg);
+}
+.scene-shield {
+  width: 9.875rem;
+  height: 10.9375rem;
+}
+.scene-shield.first {
+  left: 24%;
+  bottom: 1.6875rem;
+  transform: rotate(-7deg);
+}
+.scene-letter {
+  width: 10.3125rem;
+  height: 9.375rem;
+}
+.scene-letter.first {
+  left: 36%;
+  bottom: 0;
+  transform: rotate(7deg);
+}
+.scene-gift {
+  left: 54%;
+  width: 10.625rem;
+  height: 11.25rem;
+  bottom: 0.9375rem;
+  transform: rotate(6deg);
+}
+.scene-plane {
+  left: 64%;
+  width: 10.625rem;
+  height: 10.625rem;
+  bottom: 1.4375rem;
+  transform: rotate(-4deg);
+}
+.scene-cloud {
+  right: -1%;
+  width: 12.8125rem;
+  height: 12.8125rem;
+  bottom: 1.25rem;
+}
+.scene-shield.second {
+  left: 62%;
+  bottom: -2.5625rem;
+  transform: rotate(9deg);
+}
+.scene-coin.second {
+  left: 79%;
+  bottom: -1.8125rem;
+  transform: rotate(-9deg);
+}
+.scene-flower {
+  width: 6.25rem;
+  height: 6.25rem;
+  left: 77%;
+  bottom: 3.125rem;
+}
+.scene-qr.second {
+  right: -3%;
+  bottom: -1.5625rem;
+  transform: rotate(9deg);
+}
+.scene-smile {
+  left: 18%;
+  width: 7.8125rem;
+  height: 7.8125rem;
+  bottom: -2rem;
+}
+.workspace {
+  padding: 1.4375rem 3.625rem 4.0625rem;
+  max-width: 106.25rem;
+  margin: 0 auto;
+}
+.intro {
+  font-size: 1.5625rem;
+  line-height: 1.15;
+  margin-bottom: 0.3125rem;
+}
+.setup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.58fr) minmax(19.375rem, 1fr);
+  gap: 3.75rem;
+}
+.setup-fields h1 {
+  margin-bottom: 1.4375rem;
+  white-space: nowrap;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5625rem;
+  min-width: 0;
+}
+.field > input,
+.field > select,
+.amount-input,
+.stepper {
+  height: 3.75rem;
+  border: 0.125rem solid black;
+  border-radius: 0.75rem;
+  background: white;
+}
+.field > input,
+.field > select {
+  padding: 0.6875rem 1.0625rem;
+  font-family: 'Patrick Hand';
+  font-size: 1.4375rem;
+  width: 100%;
+}
+input::placeholder {
+  color: #70736b;
+  opacity: 1;
+}
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.375rem;
+  margin-top: 1.6875rem;
+}
+.stepper {
+  display: flex;
+  overflow: hidden;
+}
+.stepper button {
+  width: 3.5rem;
+  flex-shrink: 0;
+  font-family: 'Patrick Hand';
+  font-size: 1.625rem;
+  transition: background-color 150ms ease;
+}
+.stepper button:first-child {
+  border-right: 0.125rem solid black;
+}
+.stepper button:last-child {
+  border-left: 0.125rem solid black;
+}
+.stepper input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  text-align: center;
+  font-family: Anton;
+  font-size: 1.9375rem;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.stepper input::-webkit-inner-spin-button,
+.stepper input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+.amount-input {
+  display: flex;
+  align-items: center;
+  padding-right: 1rem;
+}
+.amount-input input {
+  font-family: 'Patrick Hand';
+  font-size: 1.5rem;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0.625rem 1rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.amount-input span {
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.split-field {
+  margin-top: 1.6875rem;
+}
+.split-field legend {
+  margin-bottom: 0.5625rem;
+}
+.split-buttons {
+  display: flex;
+  gap: 0.875rem;
+}
+.split-buttons .pill {
+  min-width: 12.5rem;
+  padding: 0.625rem 1.25rem;
+  min-height: 3.0625rem;
+}
+.split-buttons .selected {
+  background: var(--lime);
+}
+.field-note {
+  font-size: 1.1875rem;
+  margin-top: 0.625rem;
+  color: var(--muted);
+}
+.expiry-row {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 1.25rem;
+  margin-top: 1.6875rem;
+  align-items: end;
+}
+.gift-toggle {
+  display: flex;
+  gap: 1.0625rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  white-space: nowrap;
+}
+.gift-toggle .hand {
+  font-size: 1.375rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.switch {
+  border: 0.125rem solid black;
+  border-radius: 62.4375rem;
+  background: #eeeeea;
+  width: 4.25rem;
+  height: 2.4375rem;
+  padding: 0.25rem;
+  flex-shrink: 0;
+  transition: background-color 160ms ease;
+}
+.switch > span {
+  display: block;
+  width: 1.6875rem;
+  height: 1.6875rem;
+  background: black;
+  border-radius: 50%;
+  transform: translateX(0);
+  transition: transform 180ms var(--ease-out);
+}
+.switch.on {
+  background: var(--lime);
+}
+.switch.on > span {
+  transform: translateX(1.8125rem);
+}
+.refund-note {
+  font-size: 1.25rem;
+  margin-top: 1.0625rem;
+}
+.ticket-side {
+  padding-top: 0.75rem;
+}
+.pool-ticket {
+  position: relative;
+  border: 0.125rem solid black;
+  border-radius: 1.25rem;
+  padding: 1.875rem;
+  max-width: 30.625rem;
+}
+.ticket-coin {
+  position: absolute;
+  right: -1.25rem;
+  top: -2.625rem;
+  width: 5.625rem;
+  height: 5.625rem;
+  transform: rotate(12deg);
+}
+.ticket-details {
+  font-size: 1.5rem;
+  margin: 1rem 0 1.25rem;
+}
+.ticket-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 1.0625rem;
+}
+.ticket-details > div:last-child {
+  margin-bottom: 0;
+}
+.dotted-line {
+  height: 0.125rem;
+  background-image: linear-gradient(to right, black 35%, transparent 0);
+  background-size: 0.625rem 0.125rem;
+  background-repeat: repeat-x;
+}
+.deposit-label {
+  font-size: 1.4375rem;
+  margin-top: 1.0625rem;
+}
+.deposit-total {
+  font-family: Anton;
+  font-size: clamp(2.75rem, 4.4vw, 4.375rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+}
+.fee-note {
+  font-size: 1.25rem;
+  line-height: 1.2;
+  margin: 0.5rem 0 1.5625rem;
+}
+.pool-ticket .action {
+  font-size: 0.6875rem;
+  min-height: 3rem;
+  gap: 0.75rem;
+}
+.pool-ticket .action-cap {
+  width: 2.875rem;
+  height: 2.875rem;
+}
+.pool-ticket .action-label {
+  padding-left: 1.3125rem;
+}
+.promises {
+  list-style: none;
+  padding: 0;
+  margin-top: 1.375rem;
+  display: grid;
+  gap: 0.75rem;
+  font-size: 1.375rem;
+}
+.promises li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.check-mini {
+  border: 0.125rem solid black;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mint);
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.claims-page h1 {
+  font-size: clamp(2.8125rem, 5vw, 5rem);
+  margin-bottom: 1.25rem;
+}
+.sheet-actions {
+  display: flex;
+  gap: 0.875rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.sheet-actions > .pill {
+  min-height: 3.0625rem;
+  padding: 0.8125rem 1.4375rem;
+}
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1rem;
+}
+.qr-card {
+  min-width: 0;
+  border: 0.125rem solid black;
+  border-radius: 0.9375rem;
+  padding: 0.875rem 0.8125rem 0.9375rem;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 180ms var(--ease-out),
+    background-color 160ms ease;
+  position: relative;
+  background: white;
+}
+.qr-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+.qr-card-heading h2 {
+  font-size: clamp(1.125rem, 1.65vw, 1.625rem);
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+.status-chip {
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.5625rem;
+  border: 0.09375rem solid black;
+  border-radius: 62.4375rem;
+  background: var(--lime);
+  line-height: 1.1;
+}
+.claimed .status-chip,
+.closed .status-chip {
+  background: black;
+  color: white;
+}
+.qr-image {
+  width: 100%;
+  aspect-ratio: 1;
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-image svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.qr-placeholder {
+  width: 85%;
+  height: 85%;
+  background: #f0f1eb;
+  display: block;
+  border-radius: 0.1875rem;
+}
+.qr-fallback {
+  font-family: 'Patrick Hand';
+  font-size: 1.25rem;
+}
+.qr-card-foot {
+  font-size: 1.4375rem;
+  line-height: 1.25;
+  margin-top: 0.8125rem;
+  display: flex;
+  gap: 1.875rem;
+  justify-content: flex-start;
+}
+.qr-card-foot .muted {
+  font-size: 1.25rem;
+}
+.claimed-art {
+  width: 100%;
+  aspect-ratio: 1;
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.claimed-art > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76%;
+  aspect-ratio: 1;
+  background: var(--mint);
+  border: 0.1875rem solid black;
+  border-radius: 50%;
+  transform: rotate(-8deg);
+}
+.claimed-art i {
+  position: absolute;
+  background: black;
+  width: 0.1875rem;
+  height: 0.5625rem;
+  border-radius: 0.1875rem;
+  top: 38%;
+  left: 33%;
+}
+.claimed-art i:last-child {
+  left: 65%;
+}
+.closed-art > span {
+  background: var(--yellow);
+}
+.sheet-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5625rem;
+  margin-top: 1.5rem;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.pagination > span {
+  font-size: 0.75rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  min-width: 4.5rem;
+}
+.circle-button {
+  border: 0.125rem solid black;
+  border-radius: 50%;
+  width: 3.0625rem;
+  height: 3.0625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms ease;
+}
+.sheet-footer > p {
+  font-size: 1.375rem;
+}
+.live-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.58fr) minmax(19.375rem, 1fr);
+  gap: 3.75rem;
+}
+.live-heading {
+  font-size: clamp(2.8125rem, 5.3vw, 5.25rem);
+  line-height: 1.3;
+  white-space: nowrap;
+  margin: 0 0 1.5625rem;
+  letter-spacing: -0.028em;
+}
+.live-heading mark {
+  padding: 0.04em 0.08em 0.13em;
+}
+.claim-dots {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 1rem;
+}
+.claim-dot {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 0.15625rem dashed black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms ease;
+  min-width: 0;
+}
+.claim-dot.used {
+  border-style: solid;
+  background: var(--mint);
+}
+.claim-dot svg {
+  width: 72%;
+  height: 72%;
+}
+.privacy-note {
+  font-size: 1.375rem;
+  margin-top: 1.875rem;
+  white-space: nowrap;
+  letter-spacing: -0.015em;
+}
+.live-side {
+  padding-top: 1.625rem;
+}
+.where-card {
+  border: 0.125rem solid black;
+  border-radius: 1.25rem;
+  padding: 1.6875rem 1.875rem 1.25rem;
+}
+.where-card dl > div {
+  display: grid;
+  grid-template-columns: 5.125rem 1fr;
+  align-items: end;
+  gap: 0.9375rem;
+  border-bottom: 0.125rem dashed black;
+  padding: 0.75rem 0;
+}
+.where-card dl > div:last-child {
+  border: 0;
+  padding-bottom: 0.25rem;
+}
+.where-card dt {
+  font-family: Anton;
+  font-size: 3.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+.where-card dd {
+  font-size: 1.4375rem;
+  line-height: 1.25;
+  padding-bottom: 0.3125rem;
+}
+.remaining-card {
+  background: var(--yellow);
+  border: 0.125rem solid black;
+  border-radius: 1.125rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.4375rem 1.75rem;
+  margin-top: 1.125rem;
+  gap: 0.625rem;
+}
+.remaining-card strong {
+  font-family: Anton;
+  font-size: 2.75rem;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+.remaining-card p {
+  font-size: 1.375rem;
+  text-align: right;
+}
+.live-actions {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.375rem;
+}
+.live-actions .action {
+  font-size: 0.6875rem;
+}
+.live-actions .action-label {
+  padding-left: 1.3125rem;
+}
+.live-actions .action-cap {
+  width: 2.9375rem;
+  height: 2.9375rem;
+}
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+.recipient {
+  max-width: 35rem;
+  margin: 0 auto;
+  min-height: calc(100svh - 1.75rem);
+}
+.recipient .site-header {
+  height: 7.4375rem;
+  padding: 1.75rem 1.8125rem;
+}
+.recipient .brand {
+  width: 3.8125rem;
+  height: 4.1875rem;
+}
+.recipient .menu-button {
+  min-height: 3.375rem;
+  min-width: 6.5rem;
+  font-size: 0.8125rem;
+}
+.claim-page {
+  padding: 0 1.8125rem 1.4375rem;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - 9.1875rem);
+}
+.claim-page h1 {
+  font-size: clamp(4.0625rem, 9vw, 5.625rem);
+  line-height: 1.01;
+  letter-spacing: -0.025em;
+}
+.claim-page mark {
+  padding: 0 0.08em 0.075em;
+  border-radius: 0.6875rem;
+  display: inline-block;
+  margin-top: 0.125rem;
+  line-height: 1.05;
+  margin-left: -0.01em;
+}
+.claim-hero-art {
+  width: 100%;
+  height: 17.8125rem;
+  position: relative;
+  padding: 0 2.5rem;
+  margin: -0.1875rem 0 2.0625rem;
+}
+.claim-hero-art > .art {
+  height: 100%;
+  width: 100%;
+  max-width: 20.625rem;
+  margin: 0 auto;
+}
+.one-time-badge {
+  position: absolute;
+  right: -0.4375rem;
+  top: -0.0625rem;
+  width: 7.75rem;
+  transform: rotate(12deg);
+}
+.one-time-badge svg {
+  display: block;
+  width: 100%;
+}
+.claim-kicker {
+  font-size: 1.75rem;
+  line-height: 1.3;
+  margin-bottom: 1.1875rem;
+}
+.claim-intro h1 {
+  margin-bottom: 0.5rem;
+}
+.claim-description {
+  font-size: 1.75rem;
+  line-height: 1.4;
+  margin-top: 0.4375rem;
+}
+.claim-bottom {
+  margin-top: auto;
+  padding-top: 2rem;
+}
+.claim-bottom > .action {
+  width: 100%;
+  justify-content: space-between;
+  min-height: 4.5rem;
+  font-size: 1.0625rem;
+  letter-spacing: 0.055em;
+}
+.claim-bottom .action-label {
+  padding-left: 2rem;
+}
+.claim-bottom .action-cap {
+  width: 4.375rem;
+  height: 4.375rem;
+}
+.recipient-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 1.125rem;
+  min-height: 1.5625rem;
+}
+.recipient-foot p {
+  font-size: 1.5rem;
+  white-space: nowrap;
+  letter-spacing: -0.015em;
+}
+.progress-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  flex-shrink: 0;
+}
+.progress-dots span {
+  width: 1.1875rem;
+  height: 1.1875rem;
+  border: 0.125rem solid black;
+  border-radius: 50%;
+}
+.progress-dots .filled {
+  background: black;
+}
+.payout-content > .claim-kicker {
+  margin-bottom: 0.375rem;
+}
+.payout-content h1 {
+  margin-bottom: 1.9375rem;
+}
+.payout-option {
+  border: 0.15625rem solid black;
+  border-radius: 1.375rem;
+  background: white;
+  padding: 1.25rem;
+  margin-bottom: 1.125rem;
+  transition: background-color 180ms ease;
+}
+.payout-option.active {
+  background: var(--lime);
+}
+.payout-option-heading {
+  display: flex;
+  align-items: center;
+  gap: 1.0625rem;
+  text-align: left;
+  width: 100%;
+  padding: 0;
+  border: 0;
+}
+.payout-option-heading > .art {
+  width: 4.125rem;
+  height: 4.875rem;
+  flex-shrink: 0;
+}
+.payout-option-heading strong {
+  font-family: Anton;
+  font-size: 2.1875rem;
+  line-height: 1.05;
+  font-weight: 400;
+  display: block;
+  letter-spacing: -0.015em;
+}
+.payout-option-heading .hand {
+  font-size: 1.6875rem;
+  line-height: 1.1;
+  display: block;
+  margin-top: 0.1875rem;
+}
+.wallet-field {
+  margin-top: 1.25rem;
+}
+.wallet-field > label,
+.gift-brands > label {
+  font-size: 0.8125rem;
+  margin-bottom: 0.625rem;
+}
+.scan-input {
+  display: flex;
+  gap: 0.6875rem;
+}
+.scan-input input {
+  border: 0.15625rem solid black;
+  border-radius: 0.9375rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  min-width: 0;
+  font-family: 'Patrick Hand';
+  font-size: 1.625rem;
+  background: white;
+  height: 3.75rem;
+}
+.scan-input .pill {
+  border-radius: 0.9375rem;
+  padding: 0.9375rem 1.25rem;
+  min-width: 5.375rem;
+  font-size: 0.75rem;
+}
+.gift-brands {
+  margin-top: 1.1875rem;
+}
+.gift-brands select {
+  width: 100%;
+  padding: 0.625rem 0.9375rem;
+  background: white;
+  border: 0.125rem solid black;
+  border-radius: 0.75rem;
+  font-family: 'Patrick Hand';
+  font-size: 1.5625rem;
+}
+.gift-brands p {
+  font-size: 1.3125rem;
+  margin-top: 0.75rem;
+}
+.payout-privacy {
+  font-size: 1.5625rem;
+  line-height: 1.3;
+  margin: 0 0 1.25rem;
+}
+.payout-bottom {
+  padding-top: 1.625rem;
+}
+.payout-bottom .action {
+  border: 0.125rem solid black;
+}
+.payout-bottom .action-cap {
+  margin: -0.125rem;
+}
+.payout-bottom .recipient-foot {
+  margin-top: 1.0625rem;
+}
+.success-art {
+  height: 17.5rem;
+  width: 100%;
+  margin: -0.25rem auto 1.375rem;
+}
+.success-art .art {
+  max-width: 17.5rem;
+  margin: 0 auto;
+}
+.done-content .claim-kicker {
+  margin-bottom: 0.75rem;
+}
+.done-content h1 {
+  font-size: 6.75rem;
+  line-height: 0.96;
+  margin-left: -0.0625rem;
+}
+.done-content h1 mark {
+  line-height: 1.02;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-radius: 0.5625rem;
+}
+.done-description {
+  font-size: 1.75rem;
+  line-height: 1.35;
+  margin-top: 1.25rem;
+}
+.done-checklist {
+  list-style: none;
+  display: grid;
+  gap: 0.9375rem;
+  padding: 0;
+  margin-top: 1.8125rem;
+  font-size: 1.6875rem;
+  line-height: 1.2;
+}
+.done-checklist li {
+  display: flex;
+  gap: 1.0625rem;
+  align-items: center;
+}
+.done-checklist .check-mini {
+  width: 2rem;
+  height: 2rem;
+  border-width: 0.15625rem;
+}
+.check-mini.pending {
+  border-style: dashed;
+  background: white;
+}
+.claim-done .claim-bottom {
+  padding-top: 1.375rem;
+}
+.claim-unavailable {
+  padding: 0.625rem 0 1.875rem;
+}
+.claim-unavailable > .art {
+  height: 15.625rem;
+  margin-bottom: 1.875rem;
+}
+.claim-unavailable > p {
+  font-size: 1.5625rem;
+  margin: 1.125rem 0;
+}
+.claim-unavailable .action {
+  margin-top: 1.875rem;
+}
+.claim-loading {
+  display: grid;
+  place-content: center;
+  min-height: 70svh;
+  font-size: 1.5625rem;
+}
+.form-error {
+  color: #a52c24;
+  font-size: 1.3125rem;
+  line-height: 1.3;
+  margin-top: 0.9375rem;
+}
+.gift-code {
+  border: 0.125rem dashed black;
+  border-radius: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.875rem;
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1.5625rem;
+  text-align: left;
+  background: var(--yellow);
+  gap: 0.4375rem;
+}
+.gift-code .label {
+  grid-column: 1/-1;
+}
+.gift-code strong {
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+.fund-panel {
+  border: 0.125rem dashed black;
+  border-radius: 1.125rem;
+  padding: 1.375rem 1.75rem;
+  margin: 1.25rem 0;
+}
+.fund-panel > .art {
+  height: 11.25rem;
+  float: right;
+  width: 43%;
+  margin: 0 0 0.9375rem 1.25rem;
+}
+.fund-panel h2 {
+  font-size: 2.875rem;
+  line-height: 1.1;
+  margin: 0.625rem 0 1.25rem;
+}
+.fund-panel > p {
+  font-size: 1.5625rem;
+}
+.demo-note {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  clear: both;
+  border-top: 0.0625rem dashed black;
+  padding-top: 1.125rem;
+  margin-top: 1.5625rem;
+  line-height: 1.5;
+}
+.text-link {
+  display: block;
+  border: 0;
+  padding: 0.3125rem 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.3125rem;
+  margin-top: 0.875rem;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.75rem;
+  transform: translate(-50%, 1.25rem);
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 0.8125rem;
+  border: 0.125rem solid black;
+  border-radius: 0.875rem;
+  padding: 1rem 1.125rem;
+  background: white;
+  box-shadow: 0 0.375rem 1.5rem #0002;
+  z-index: 100;
+  max-width: calc(100vw - 2.1875rem);
+  width: max-content;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    transform 250ms var(--ease-out),
+    opacity 180ms ease;
+}
+.toast.visible {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.toast > button {
+  border: 0;
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+}
+.toast .check-mini {
+  width: 1.5625rem;
+  height: 1.5625rem;
+}
+dialog {
+  border: 0.125rem solid black;
+  background: white;
+  border-radius: 1.25rem;
+  padding: 2rem;
+  max-width: calc(100vw - 2rem);
+  width: 28.75rem;
+  color: black;
+  box-shadow: 0 0.9375rem 3.75rem #0003;
+}
+dialog::backdrop {
+  background: #232420a1;
+}
+dialog[open] {
+  animation: menu-in 200ms var(--ease-out);
+}
+dialog form {
+  position: relative;
+}
+dialog .dialog-x {
+  position: absolute;
+  right: -0.875rem;
+  top: -0.875rem;
+  width: 2.1875rem;
+  height: 2.1875rem;
+}
+dialog h2 {
+  font-size: 2.625rem;
+  line-height: 1.1;
+  margin: 0.9375rem 0;
+}
+dialog p {
+  font-size: 1.4375rem;
+  margin: 0.75rem 0 1.4375rem;
+}
+dialog .action {
+  width: 100%;
+  justify-content: space-between;
+}
+dialog .text-link {
+  margin: 1.0625rem auto 0;
+}
+.scanner-preview {
+  position: relative;
+  max-width: 14.375rem;
+  aspect-ratio: 1;
+  margin: 1.5625rem auto;
+  padding: 0.875rem;
+  background: #f6f7f0;
+  border-radius: 0.625rem;
+}
+.scanner-preview .qr-image {
+  margin: 0;
+}
+.scan-corner {
+  position: absolute;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-color: black;
+  border-style: solid;
+}
+.scan-corner.tl {
+  top: 0;
+  left: 0;
+  border-width: 0.1875rem 0 0 0.1875rem;
+  border-radius: 0.625rem 0 0;
+}
+.scan-corner.tr {
+  top: 0;
+  right: 0;
+  border-width: 0.1875rem 0.1875rem 0 0;
+  border-radius: 0 0.625rem 0 0;
+}
+.scan-corner.bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 0.1875rem 0.1875rem;
+  border-radius: 0 0 0 0.625rem;
+}
+.scan-corner.br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 0.1875rem 0.1875rem 0;
+  border-radius: 0 0 0.625rem 0;
+}
+.not-found {
+  padding: 5rem 3.75rem;
+}
+.not-found > p {
+  font-size: 1.625rem;
+  margin-bottom: 0.9375rem;
+}
+.not-found .action {
+  margin-top: 2.1875rem;
+}
+.skip-link {
+  position: fixed;
+  top: -6.25rem;
+  left: 1.875rem;
+  background: var(--lime);
+  padding: 0.9375rem;
+  border: 0.125rem solid black;
+  border-radius: 0.5rem;
+  z-index: 200;
+  font-weight: 700;
+}
+.skip-link:focus {
+  top: 1.25rem;
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.3125rem) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .action.primary:hover {
+    background: #e1ff67;
+  }
+  .action.secondary:hover,
+  .pill:hover,
+  .circle-button:hover,
+  .stepper button:hover {
+    background: #f3f4ed;
+  }
+  .action:hover .action-cap {
+    transform: rotate(90deg);
+  }
+  .action:has(.action-cap):hover {
+    transform: translateY(-0.125rem);
+  }
+  .brand:hover {
+    transform: rotate(-6deg);
+  }
+  .qr-card:not(.claimed):not(.closed):hover {
+    transform: translateY(-0.3125rem) rotate(-0.7deg);
+    background: #fbffe8;
+  }
+  .claim-dot:hover {
+    transform: scale(1.08);
+  }
+  .menu-panel a:hover {
+    background: var(--lime);
+    border-radius: 0.3125rem;
+  }
+  .text-link:hover {
+    color: #387657;
+  }
+}
+@media (min-width: 900px) and (max-width: 1150px) {
+  .workspace {
+    padding: 1.5rem 2.375rem 3.125rem;
+  }
+  .setup-grid,
+  .live-grid {
+    gap: 2.1875rem;
+    grid-template-columns: minmax(0, 1.55fr) minmax(18.125rem, 1fr);
+  }
+  .setup-fields h1 {
+    font-size: 3.5625rem;
+  }
+  .pool-ticket {
+    padding: 1.5rem;
+  }
+  .ticket-details {
+    font-size: 1.375rem;
+  }
+  .gift-toggle {
+    white-space: normal;
+    gap: 0.625rem;
+  }
+  .gift-toggle .hand {
+    font-size: 1.25rem;
+  }
+  .split-buttons {
+    gap: 0.625rem;
+  }
+  .split-buttons .pill {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.625rem;
+    padding: 0.625rem 0.8125rem;
+  }
+  .expiry-row {
+    grid-template-columns: 1fr 1.12fr;
+  }
+  .qr-grid {
+    gap: 0.75rem;
+  }
+  .qr-card {
+    padding: 0.75rem 0.625rem;
+  }
+  .qr-card-heading {
+    flex-wrap: wrap;
+    gap: 0.4375rem;
+  }
+  .qr-card-heading h2 {
+    font-size: 1.5rem;
+  }
+  .qr-card-foot {
+    gap: 0.75rem;
+    font-size: 1.375rem;
+  }
+  .qr-card-foot .muted {
+    font-size: 1.125rem;
+  }
+  .where-card {
+    padding: 1.4375rem;
+  }
+  .where-card dl > div {
+    grid-template-columns: 4.375rem 1fr;
+    gap: 0.625rem;
+  }
+  .where-card dd {
+    font-size: 1.25rem;
+  }
+  .where-card dt {
+    font-size: 3.4375rem;
+  }
+  .remaining-card {
+    padding: 1.25rem;
+  }
+  .remaining-card strong {
+    font-size: 2.3125rem;
+  }
+  .privacy-note {
+    white-space: normal;
+    font-size: 1.25rem;
+  }
+  .live-heading {
+    font-size: 4.9vw;
+  }
+  .claim-dots {
+    gap: 0.8125rem;
+  }
+  .landing {
+    padding-top: 1.875rem;
+  }
+  .hero-copy {
+    font-size: 1.4375rem;
+  }
+  .hero-badge {
+    width: 7.25rem;
+    height: 7.25rem;
+    right: -1.875rem;
+  }
+  .hero-cloud {
+    width: 5.6875rem;
+    top: 1.25rem;
+  }
+}
+@media (max-width: 899px) {
+  body {
+    padding: 0.625rem;
+  }
+  .paper {
+    min-height: calc(100svh - 1.25rem);
+    border-radius: 0.9375rem;
+  }
+  .site-header {
+    height: 6.5625rem;
+    padding: 1.5625rem 1.75rem;
+  }
+  .brand {
+    width: 3.1875rem;
+    height: 3.625rem;
+  }
+  .workspace {
+    padding: 1.5625rem 1.875rem 2.8125rem;
+  }
+  .setup-grid,
+  .live-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.1875rem;
+  }
+  .setup-fields h1 {
+    font-size: clamp(2.625rem, 8.3vw, 4.25rem);
+  }
+  .ticket-side {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 1.6875rem;
+    align-items: center;
+    padding-top: 0;
+  }
+  .pool-ticket {
+    padding: 1.5625rem;
+    max-width: none;
+  }
+  .ticket-coin {
+    width: 4.375rem;
+    height: 4.375rem;
+    right: -0.75rem;
+    top: -1.875rem;
+  }
+  .promises {
+    font-size: 1.3125rem;
+    margin-top: 0;
+    gap: 1.125rem;
+  }
+  .deposit-total {
+    font-size: 3.375rem;
+  }
+  .gift-toggle {
+    gap: 0.75rem;
+  }
+  .gift-toggle .hand {
+    font-size: 1.4375rem;
+  }
+  .steps {
+    top: 1.5625rem;
+    gap: 0.3125rem;
+  }
+  .steps a {
+    min-width: 5rem;
+    padding: 0.625rem 0.8125rem;
+    font-size: 0.625rem;
+    min-height: 2.625rem;
+  }
+  .steps svg {
+    width: 1.625rem;
+  }
+  .menu-button {
+    min-width: 5.5rem;
+    min-height: 2.625rem;
+    padding: 0.6875rem 1.25rem;
+    font-size: 0.6875rem;
+  }
+  .qr-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.0625rem;
+  }
+  .qr-card {
+    padding: 0.9375rem;
+  }
+  .qr-card-heading h2 {
+    font-size: 1.6875rem;
+  }
+  .status-chip {
+    font-size: 0.5625rem;
+  }
+  .qr-card-foot {
+    font-size: 1.5625rem;
+    justify-content: space-between;
+  }
+  .qr-card-foot .muted {
+    font-size: 1.375rem;
+  }
+  .claims-page h1 {
+    font-size: clamp(2.4375rem, 7.5vw, 4.0625rem);
+  }
+  .sheet-actions {
+    gap: 0.5625rem;
+    margin-top: 1rem;
+  }
+  .sheet-actions .pill,
+  .sheet-actions .action {
+    font-size: 0.625rem;
+  }
+  .sheet-actions > .pill {
+    padding: 0.75rem 1.0625rem;
+  }
+  .sheet-actions .action-label {
+    padding-left: 1.0625rem;
+  }
+  .sheet-footer > p {
+    font-size: 1.25rem;
+    max-width: 15.625rem;
+    text-align: right;
+  }
+  .live-heading {
+    font-size: clamp(2.4375rem, 7.9vw, 4.25rem);
+    margin-bottom: 1.75rem;
+  }
+  .claim-dots {
+    max-width: 40.625rem;
+    gap: 1.0625rem;
+  }
+  .privacy-note {
+    white-space: normal;
+    font-size: 1.375rem;
+    max-width: 40.625rem;
+  }
+  .live-side {
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.125rem;
+    align-items: start;
+  }
+  .where-card {
+    grid-row: span 2;
+    padding: 1.5625rem;
+  }
+  .where-card dt {
+    font-size: 3.4375rem;
+  }
+  .where-card dd {
+    font-size: 1.375rem;
+  }
+  .remaining-card {
+    margin: 0;
+    padding: 1.4375rem 1.25rem;
+    flex-wrap: wrap;
+  }
+  .remaining-card strong {
+    font-size: 2.625rem;
+  }
+  .remaining-card p {
+    text-align: left;
+  }
+  .live-actions {
+    margin: 0;
+    gap: 0.8125rem;
+  }
+  .live-actions .action {
+    font-size: 0.5625rem;
+    white-space: normal;
+    min-height: 2.9375rem;
+    gap: 0.4375rem;
+  }
+  .live-actions .action-label {
+    padding: 0 0.9375rem;
+  }
+  .live-actions .action-cap {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .landing {
+    min-height: calc(100svh - 7.8125rem);
+    padding-top: 2.8125rem;
+    padding-bottom: 16.25rem;
+  }
+  .landing h1 {
+    font-size: 9.5vw;
+  }
+  .hero-intro {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .hero-cloud {
+    width: 5.1875rem;
+    height: 4.6875rem;
+    top: 0.625rem;
+    left: -0.4375rem;
+    transform: translateY(-75%);
+  }
+  .hero-badge {
+    width: 6.5625rem;
+    height: 6.5625rem;
+    right: -0.9375rem;
+    bottom: -3.9375rem;
+  }
+  .hero-copy {
+    font-size: 1.4375rem;
+    max-width: 31.875rem;
+    margin-top: 1.75rem;
+  }
+  .desktop-break {
+    display: none;
+  }
+  .hero-actions {
+    gap: 0.75rem;
+  }
+  .hero-actions .action {
+    font-size: 0.625rem;
+    gap: 0.75rem;
+  }
+  .hero-actions .action-label {
+    padding-left: 1.125rem;
+    padding-right: 1.125rem;
+  }
+  .hero-actions .action.has-cap .action-label {
+    padding-right: 0;
+  }
+  .scenery {
+    bottom: -1.875rem;
+    height: 12.5rem;
+  }
+  .scenery > * {
+    scale: 0.85;
+    transform-origin: bottom center;
+  }
+  .scene-shield.first {
+    left: 24%;
+    bottom: 0.5rem;
+  }
+  .scene-qr.first {
+    left: 7%;
+  }
+  .scene-letter.first {
+    left: 35%;
+    bottom: -1.25rem;
+  }
+  .scene-gift {
+    left: 51%;
+    bottom: 0;
+  }
+  .scene-plane {
+    left: 67%;
+    bottom: 0.4375rem;
+  }
+  .scene-coin.second {
+    left: 75%;
+  }
+  .scene-shield.second {
+    left: 59%;
+  }
+  .recipient {
+    min-height: calc(100svh - 1.25rem);
+  }
+  .recipient .site-header {
+    height: 7.0625rem;
+  }
+  .claim-page {
+    min-height: calc(100svh - 8.3125rem);
+  }
+}
+@media (max-width: 599px) {
+  body {
+    padding: 0.5rem;
+  }
+  .paper {
+    border-radius: 1rem;
+    min-height: calc(100svh - 1rem);
+  }
+  .site-header {
+    padding: 1.375rem;
+    height: 6.4375rem;
+  }
+  .brand {
+    width: 3.0625rem;
+    height: 3.4375rem;
+  }
+  .menu-button {
+    min-height: 2.6875rem;
+    min-width: 5.375rem;
+  }
+  .steps {
+    position: static;
+    transform: none;
+    gap: 0.25rem;
+    margin-top: 4.0625rem;
+    justify-content: center;
+    left: auto;
+    top: auto;
+    position: absolute;
+    width: calc(100% - 2.75rem);
+  }
+  .steps a {
+    min-width: 4.8125rem;
+    min-height: 2.1875rem;
+    padding: 0.4375rem 0.8125rem;
+    font-size: 0.625rem;
+  }
+  .steps svg {
+    width: 1.875rem;
+  }
+  .site-header:has(.steps) {
+    height: 9.5625rem;
+  }
+  .workspace {
+    padding: 0.875rem 1.375rem 2.1875rem;
+  }
+  .intro {
+    font-size: 1.4375rem;
+    margin-bottom: 0.5625rem;
+  }
+  .setup-fields h1 {
+    white-space: normal;
+    font-size: clamp(2.5625rem, 10.2vw, 3.8125rem);
+    margin-bottom: 1.4375rem;
+    line-height: 1.05;
+  }
+  .setup-grid {
+    gap: 2.0625rem;
+  }
+  .field-row {
+    gap: 0.8125rem;
+    margin-top: 1.375rem;
+  }
+  .field > input,
+  .field > select,
+  .amount-input,
+  .stepper {
+    height: 3.4375rem;
+    border-radius: 0.6875rem;
+  }
+  .field > input,
+  .field > select {
+    font-size: 1.375rem;
+    padding: 0.625rem 0.8125rem;
+  }
+  label,
+  .label,
+  legend {
+    font-size: 0.625rem;
+  }
+  .field {
+    gap: 0.5rem;
+  }
+  .stepper button {
+    width: 2.4375rem;
+    font-size: 1.4375rem;
+  }
+  .stepper input {
+    font-size: 1.75rem;
+  }
+  .amount-input {
+    padding-right: 0.6875rem;
+  }
+  .amount-input input {
+    font-size: 1.4375rem;
+    padding: 0.625rem 0.75rem;
+  }
+  .amount-input span {
+    font-size: 0.625rem;
+  }
+  .split-field {
+    margin-top: 1.375rem;
+  }
+  .split-buttons {
+    gap: 0.625rem;
+  }
+  .split-buttons .pill {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.5625rem;
+    padding: 0.5625rem 0.75rem;
+    min-height: 2.8125rem;
+  }
+  .expiry-row {
+    margin-top: 1.375rem;
+    grid-template-columns: 1fr;
+  }
+  .gift-toggle {
+    margin-top: 0.375rem;
+    justify-content: space-between;
+    padding-bottom: 0;
+  }
+  .gift-toggle .hand {
+    font-size: 1.4375rem;
+  }
+  .switch {
+    width: 3.75rem;
+    height: 2.1875rem;
+    padding: 0.1875rem;
+  }
+  .switch > span {
+    width: 1.5625rem;
+    height: 1.5625rem;
+  }
+  .switch.on > span {
+    transform: translateX(1.5625rem);
+  }
+  .refund-note {
+    font-size: 1.1875rem;
+  }
+  .ticket-side {
+    display: block;
+    padding-top: 0.75rem;
+  }
+  .pool-ticket {
+    padding: 1.5625rem;
+  }
+  .ticket-coin {
+    top: -1.8125rem;
+    width: 4.75rem;
+    height: 4.75rem;
+    right: -0.75rem;
+  }
+  .ticket-details {
+    font-size: 1.5rem;
+  }
+  .pool-ticket > .label {
+    font-size: 0.6875rem;
+  }
+  .deposit-total {
+    font-size: 3.625rem;
+  }
+  .fee-note {
+    font-size: 1.25rem;
+  }
+  .promises {
+    margin-top: 1.375rem;
+    font-size: 1.3125rem;
+    gap: 0.75rem;
+  }
+  .pool-ticket .action {
+    min-height: 3.125rem;
+    font-size: 0.6875rem;
+  }
+  .pool-ticket .action-cap {
+    width: 3rem;
+    height: 3rem;
+  }
+  .claims-page h1 {
+    font-size: clamp(2.1875rem, 9vw, 3.375rem);
+    margin-bottom: 1.125rem;
+  }
+  .sheet-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5625rem;
+    margin-bottom: 1.25rem;
+  }
+  .sheet-actions .pill {
+    font-size: 0.5625rem;
+    padding: 0.75rem 0.625rem;
+    min-height: 2.6875rem;
+  }
+  .sheet-actions .action {
+    font-size: 0.5625rem;
+    min-height: 2.6875rem;
+    gap: 0.375rem;
+    justify-content: space-between;
+  }
+  .sheet-actions .action-label {
+    padding-left: 0.8125rem;
+  }
+  .sheet-actions .action-cap {
+    height: 2.5625rem;
+    width: 2.5625rem;
+  }
+  .qr-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .qr-card {
+    padding: 0.8125rem 0.6875rem;
+    border-radius: 0.8125rem;
+  }
+  .qr-card-heading h2 {
+    font-size: 1.5rem;
+  }
+  .status-chip {
+    font-size: 0.4375rem;
+    padding: 0.25rem 0.375rem;
+  }
+  .qr-image,
+  .claimed-art {
+    margin-top: 0.625rem;
+  }
+  .qr-card-foot {
+    font-size: 1.375rem;
+    gap: 0.625rem;
+    margin-top: 0.625rem;
+  }
+  .qr-card-foot .muted {
+    font-size: 1.1875rem;
+  }
+  .claimed-art > span {
+    border-width: 0.15625rem;
+  }
+  .claimed-art svg {
+    width: 3.1875rem;
+    height: 3.1875rem;
+  }
+  .sheet-footer {
+    align-items: flex-start;
+    gap: 1.0625rem;
+    flex-direction: column;
+  }
+  .pagination {
+    gap: 0.8125rem;
+  }
+  .pagination .circle-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .pagination > span {
+    font-size: 0.6875rem;
+    min-width: 4.25rem;
+  }
+  .sheet-footer > p {
+    font-size: 1.1875rem;
+    text-align: left;
+    max-width: none;
+  }
+  .live-heading {
+    font-size: clamp(2rem, 8.4vw, 3.0625rem);
+    white-space: normal;
+    line-height: 1.4;
+    margin-bottom: 1.25rem;
+  }
+  .live-grid {
+    gap: 1.8125rem;
+  }
+  .claim-dots {
+    gap: 0.625rem;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+  .claim-dot {
+    border-width: 0.125rem;
+  }
+  .privacy-note {
+    font-size: 1.25rem;
+    margin-top: 1.4375rem;
+    line-height: 1.35;
+  }
+  .live-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .where-card,
+  .remaining-card {
+    width: 100%;
+    padding: 1.4375rem;
+  }
+  .where-card > .label,
+  .remaining-card .label {
+    font-size: 0.6875rem;
+  }
+  .where-card dl > div {
+    grid-template-columns: 4.375rem 1fr;
+    gap: 1.125rem;
+  }
+  .where-card dt {
+    font-size: 3.5625rem;
+  }
+  .where-card dd {
+    font-size: 1.4375rem;
+  }
+  .remaining-card {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .remaining-card strong {
+    font-size: 2.6875rem;
+  }
+  .remaining-card p {
+    text-align: right;
+    font-size: 1.4375rem;
+  }
+  .live-actions {
+    gap: 0.75rem;
+  }
+  .live-actions .action {
+    font-size: 0.625rem;
+    min-height: 3.0625rem;
+  }
+  .live-actions .action-label {
+    padding-left: 1.1875rem;
+    padding-right: 1.1875rem;
+  }
+  .live-actions .action.has-cap .action-label {
+    padding-right: 0;
+  }
+  .live-actions .action-cap {
+    width: 2.9375rem;
+    height: 2.9375rem;
+  }
+  .landing {
+    min-height: calc(100svh - 7.4375rem);
+    padding: 3.5rem 0.9375rem 15rem;
+  }
+  .hero-intro {
+    font-size: 1.1875rem;
+    margin-bottom: 1.125rem;
+    transform: rotate(-3deg);
+  }
+  .landing h1 {
+    font-size: 11.1vw;
+    line-height: 1.09;
+    letter-spacing: -0.03em;
+  }
+  .zero {
+    padding: 0 0.3125rem 0.375rem;
+    margin: 0 0.0625rem -0.375rem;
+    border-radius: 0.4375rem;
+  }
+  .hero-cloud {
+    width: 4rem;
+    height: 3.75rem;
+    left: 0;
+    top: -0.75rem;
+  }
+  .hero-badge {
+    width: 4.625rem;
+    height: 4.625rem;
+    right: -0.0625rem;
+    bottom: -3.9375rem;
+    transform: rotate(13deg);
+  }
+  .hero-copy {
+    font-size: 1.3125rem;
+    line-height: 1.35;
+    margin: 1.8125rem auto 1.4375rem;
+    max-width: 20rem;
+    padding: 0 0.4375rem;
+  }
+  .hero-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .hero-actions .action {
+    font-size: 0.6875rem;
+    min-height: 3.0625rem;
+    gap: 1.125rem;
+    width: 15.3125rem;
+    justify-content: space-between;
+  }
+  .hero-actions .secondary {
+    justify-content: center;
+    width: 15.3125rem;
+  }
+  .hero-actions .action-label {
+    padding-left: 1.375rem;
+  }
+  .hero-actions .action-cap {
+    width: 2.9375rem;
+    height: 2.9375rem;
+  }
+  .scenery {
+    height: 10.9375rem;
+    bottom: -1.25rem;
+  }
+  .scenery > * {
+    scale: 0.72;
+    transform-origin: bottom center;
+  }
+  .scene-coin.first {
+    left: -10%;
+    bottom: 0;
+  }
+  .scene-qr.first {
+    left: 5%;
+    bottom: -1.125rem;
+  }
+  .scene-shield.first {
+    left: 27%;
+    bottom: -1.0625rem;
+  }
+  .scene-letter.first {
+    left: 48%;
+    bottom: -1.25rem;
+  }
+  .scene-gift {
+    left: 64%;
+    bottom: 0.1875rem;
+  }
+  .scene-plane {
+    display: none;
+  }
+  .scene-cloud {
+    right: -24%;
+    bottom: -0.8125rem;
+  }
+  .scene-shield.second {
+    left: 70%;
+    bottom: -4.8125rem;
+  }
+  .scene-coin.second {
+    left: 49%;
+    bottom: -3.875rem;
+  }
+  .scene-qr.second {
+    display: none;
+  }
+  .scene-smile {
+    left: 14%;
+    bottom: -2.8125rem;
+  }
+  .scene-flower {
+    left: 39%;
+    bottom: 1rem;
+  }
+  .recipient {
+    min-height: calc(100svh - 1rem);
+  }
+  .recipient .site-header {
+    height: 6.25rem;
+    padding: 1.25rem 1.375rem;
+  }
+  .recipient .brand {
+    width: 3.125rem;
+    height: 3.5rem;
+  }
+  .recipient .menu-button {
+    min-height: 2.6875rem;
+    min-width: 5.1875rem;
+    padding: 0.6875rem 1.125rem;
+    font-size: 0.6875rem;
+  }
+  .claim-page {
+    padding: 0 1.375rem 1.3125rem;
+    min-height: calc(100svh - 7.25rem);
+  }
+  .claim-page h1 {
+    font-size: clamp(3.8125rem, 15.5vw, 5.1875rem);
+    line-height: 1.03;
+  }
+  .claim-hero-art {
+    height: 13.625rem;
+    padding: 0 2.1875rem;
+    margin: -0.75rem 0 2.0625rem;
+  }
+  .claim-hero-art > .art {
+    max-width: 16.5625rem;
+  }
+  .one-time-badge {
+    width: 6.25rem;
+    right: -0.4375rem;
+    top: -0.9375rem;
+  }
+  .claim-kicker {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .claim-description {
+    font-size: 1.4375rem;
+    line-height: 1.4;
+    margin-top: 0.3125rem;
+  }
+  .claim-intro h1 {
+    margin-bottom: 0.3125rem;
+  }
+  .claim-page mark {
+    border-radius: 0.5625rem;
+    padding-bottom: 0.09em;
+  }
+  .claim-bottom {
+    padding-top: 1.75rem;
+  }
+  .claim-bottom > .action {
+    min-height: 3.625rem;
+    font-size: 0.875rem;
+    gap: 0.75rem;
+  }
+  .claim-bottom .action-label {
+    padding-left: 1.625rem;
+  }
+  .claim-bottom .action-cap {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  .recipient-foot {
+    margin-top: 0.9375rem;
+    gap: 0.5rem;
+  }
+  .recipient-foot p {
+    font-size: 1.25rem;
+  }
+  .progress-dots {
+    gap: 0.375rem;
+  }
+  .progress-dots span {
+    width: 1rem;
+    height: 1rem;
+  }
+  .payout-content > .claim-kicker {
+    margin-bottom: 0.3125rem;
+  }
+  .payout-content h1 {
+    font-size: clamp(4rem, 16vw, 5.25rem);
+    margin-bottom: 1.625rem;
+    line-height: 0.99;
+  }
+  .payout-option {
+    border-width: 0.125rem;
+    border-radius: 1.125rem;
+    padding: 1.0625rem;
+    margin-bottom: 1rem;
+  }
+  .payout-option-heading {
+    gap: 0.8125rem;
+  }
+  .payout-option-heading > .art {
+    width: 3.3125rem;
+    height: 4.0625rem;
+  }
+  .payout-option-heading strong {
+    font-size: clamp(1.5rem, 6.65vw, 2.0625rem);
+  }
+  .payout-option-heading .hand {
+    font-size: 1.375rem;
+    line-height: 1.15;
+    margin-top: 0.1875rem;
+  }
+  .wallet-field {
+    margin-top: 1.0625rem;
+  }
+  .wallet-field > label,
+  .gift-brands > label {
+    font-size: 0.6875rem;
+    margin-bottom: 0.5rem;
+  }
+  .scan-input {
+    gap: 0.5625rem;
+  }
+  .scan-input input {
+    height: 3rem;
+    border-width: 0.125rem;
+    border-radius: 0.75rem;
+    font-size: 1.4375rem;
+    padding: 0.5625rem 0.8125rem;
+  }
+  .scan-input .pill {
+    border-radius: 0.75rem;
+    min-width: 4.5625rem;
+    padding: 0.75rem 0.875rem;
+    font-size: 0.625rem;
+  }
+  .payout-privacy {
+    font-size: 1.3125rem;
+    line-height: 1.3;
+    margin-bottom: 1.0625rem;
+  }
+  .payout-bottom {
+    padding-top: 1.75rem;
+  }
+  .payout-bottom .action {
+    min-height: 3.625rem;
+  }
+  .payout-bottom .action-cap {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  .payout-bottom .recipient-foot {
+    margin-top: 1.0625rem;
+  }
+  .gift-brands {
+    margin-top: 1rem;
+  }
+  .gift-brands select {
+    font-size: 1.375rem;
+  }
+  .gift-brands p {
+    font-size: 1.25rem;
+  }
+  .form-error {
+    font-size: 1.25rem;
+  }
+  .success-art {
+    height: 13.75rem;
+    margin: -0.875rem auto 1.25rem;
+  }
+  .success-art .art {
+    max-width: 14.0625rem;
+  }
+  .done-content .claim-kicker {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .done-content h1 {
+    font-size: clamp(5.0625rem, 22vw, 6.75rem);
+    line-height: 0.93;
+  }
+  .done-content h1 mark {
+    padding: 0 0.08em;
+    line-height: 1.04;
+  }
+  .done-description {
+    font-size: 1.4375rem;
+    line-height: 1.4;
+    margin-top: 1.125rem;
+  }
+  .done-checklist {
+    font-size: 1.4375rem;
+    margin-top: 1.4375rem;
+    gap: 0.9375rem;
+  }
+  .done-checklist li {
+    gap: 0.8125rem;
+  }
+  .done-checklist .check-mini {
+    width: 1.6875rem;
+    height: 1.6875rem;
+    border-width: 0.125rem;
+  }
+  .claim-done .claim-bottom {
+    padding-top: 1.125rem;
+  }
+  .menu-panel {
+    width: 17.5rem;
+    top: 3.4375rem;
+    right: 0;
+    padding: 1rem;
+  }
+  .menu-panel a {
+    font-size: 0.8125rem;
+  }
+  .fund-panel {
+    padding: 1.25rem;
+  }
+  .fund-panel h2 {
+    font-size: 2.3125rem;
+  }
+  .fund-panel > .art {
+    height: 10rem;
+    float: none;
+    width: 100%;
+    margin-bottom: 1.25rem;
+  }
+  .fund-panel > p {
+    font-size: 1.4375rem;
+  }
+  .demo-note {
+    font-size: 0.75rem;
+  }
+  .toast {
+    font-size: 0.75rem;
+    gap: 0.625rem;
+    padding: 0.8125rem;
+    bottom: 1.25rem;
+    line-height: 1.5;
+  }
+  .toast > button {
+    margin-left: 0;
+  }
+  dialog {
+    padding: 1.6875rem;
+  }
+  dialog h2 {
+    font-size: 2.25rem;
+  }
+  dialog p {
+    font-size: 1.375rem;
+  }
+  .not-found {
+    padding: 3.125rem 1.5625rem;
+  }
+  .not-found h1 {
+    font-size: 3rem;
+  }
+}
+@media (max-width: 369px) {
+  .claim-page {
+    padding-left: 1.125rem;
+    padding-right: 1.125rem;
+  }
+  .recipient .site-header {
+    padding-left: 1.125rem;
+    padding-right: 1.125rem;
+  }
+  .claim-hero-art {
+    height: 12.1875rem;
+    margin-bottom: 1.5625rem;
+    padding: 0 1.5625rem;
+  }
+  .one-time-badge {
+    width: 5.375rem;
+  }
+  .claim-page h1 {
+    font-size: 3.5625rem;
+  }
+  .claim-kicker {
+    font-size: 1.375rem;
+  }
+  .claim-description {
+    font-size: 1.3125rem;
+  }
+  .recipient-foot p {
+    font-size: 1.0625rem;
+  }
+  .payout-option {
+    padding: 0.8125rem;
+  }
+  .payout-option-heading {
+    gap: 0.5625rem;
+  }
+  .payout-option-heading > .art {
+    width: 2.8125rem;
+  }
+  .payout-option-heading strong {
+    font-size: 1.4375rem;
+  }
+  .payout-option-heading .hand {
+    font-size: 1.25rem;
+  }
+  .done-content h1 {
+    font-size: 5rem;
+  }
+  .done-checklist {
+    font-size: 1.25rem;
+  }
+  .success-art {
+    height: 11.875rem;
+  }
+  .claim-dots {
+    gap: 0.4375rem;
+  }
+  .qr-card-heading {
+    flex-wrap: wrap;
+    gap: 0.4375rem;
+  }
+  .hero-badge {
+    right: -0.5625rem;
+    width: 3.875rem;
+    height: 3.875rem;
+  }
+  .sheet-actions .action {
+    font-size: 0.5rem;
+  }
+  .sheet-actions .action-cap {
+    height: 2.1875rem;
+    width: 2.1875rem;
+  }
+  .sheet-actions .action-label {
+    padding-left: 0.625rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .toast,
+  .toast.visible {
+    transform: translateX(-50%);
+  }
+  .action:hover .action-cap,
+  .action:has(.action-cap):hover,
+  .brand:hover,
+  .qr-card:hover,
+  .claim-dot:hover {
+    transform: none !important;
+  }
+}
+@media print {
+  body {
+    padding: 0;
+    background: white;
+  }
+  .paper {
+    border-radius: 0;
+    overflow: visible;
+  }
+  .site-header,
+  .sheet-actions,
+  .sheet-footer,
+  .toast,
+  .skip-link {
+    display: none;
+  }
+  .workspace {
+    padding: 0.9375rem;
+  }
+  .claims-page h1 {
+    font-size: 2.1875rem;
+  }
+  .claims-page > .intro {
+    font-size: 1.25rem;
+  }
+  .qr-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  .qr-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .qr-card-heading h2 {
+    font-size: 1.4375rem;
+  }
+  .qr-card-foot {
+    font-size: 1.25rem;
+  }
+  .qr-image {
+    max-height: 8.75rem;
+  }
+  .status-chip {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .qr-card {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+/* Reference fidelity: display proportions and the mobile 390 × 844 canvas. */
+@media (min-width: 900px) {
+  h1 {
+    font-size: clamp(3.625rem, 6.4vw, 6.875rem);
+    letter-spacing: 0;
+  }
+  .site-header {
+    padding-top: 2rem;
+  }
+  .brand {
+    width: 4rem;
+    height: 4.375rem;
+  }
+  .steps {
+    top: 2rem;
+  }
+  .steps a {
+    min-width: 6.9375rem;
+    font-size: 0.875rem;
+    min-height: 3.0625rem;
+  }
+  .steps svg {
+    width: 3.125rem;
+  }
+  .menu-button {
+    font-size: 0.875rem;
+    min-height: 3.0625rem;
+    min-width: 6.375rem;
+  }
+  .workspace {
+    padding-left: 4.0625rem;
+    padding-right: 4.0625rem;
+  }
+  .intro {
+    font-size: 1.6875rem;
+  }
+  .action {
+    font-size: 0.875rem;
+    min-height: 3.4375rem;
+  }
+  .action-cap {
+    width: 3.3125rem;
+    height: 3.3125rem;
+  }
+  .action-label {
+    padding: 0 1.5625rem;
+  }
+  .pill {
+    font-size: 0.875rem;
+    min-height: 3.3125rem;
+    padding: 0.875rem 1.5625rem;
+  }
+  .label,
+  label,
+  legend {
+    font-size: 0.875rem;
+  }
+  .landing h1 {
+    font-size: clamp(5rem, 9.3vw, 12.5rem);
+    letter-spacing: 0;
+    line-height: 0.94;
+  }
+  .hero-intro {
+    font-size: 1.75rem;
+    margin-bottom: 1.5625rem;
+  }
+  .hero-copy {
+    font-size: 1.6875rem;
+    max-width: 53.125rem;
+    margin-top: 1.625rem;
+  }
+  .hero-badge {
+    right: -5.4375rem;
+    bottom: -3.625rem;
+    width: 9.625rem;
+    height: 9.625rem;
+  }
+  .hero-cloud {
+    width: 7.375rem;
+    height: 6.875rem;
+    top: 3.0625rem;
+    left: 0.1875rem;
+  }
+  .zero {
+    padding: 0 0.8125rem;
+    margin: 0 0.4375rem;
+    background: transparent;
+    transform: none;
+    z-index: 0;
+  }
+  .zero::before {
+    content: '';
+    position: absolute;
+    inset: -0.3em 0 -0.28em;
+    z-index: -1;
+    background: var(--lime);
+    border-radius: 1rem;
+  }
+  .scenery {
+    bottom: -0.9375rem;
+  }
+  .scene-cloud .art path:first-child {
+    fill: white;
+  }
+  .setup-fields h1 {
+    margin-bottom: 1.625rem;
+  }
+  .field > input,
+  .field > select,
+  .amount-input,
+  .stepper {
+    height: 4rem;
+  }
+  .field-row {
+    margin-top: 1.8125rem;
+  }
+  .split-field {
+    margin-top: 1.8125rem;
+  }
+  .split-buttons .pill {
+    min-width: 13.75rem;
+    font-size: 0.8125rem;
+    min-height: 3.3125rem;
+  }
+  .expiry-row {
+    margin-top: 1.8125rem;
+  }
+  .pool-ticket {
+    padding: 2.0625rem 1.875rem;
+  }
+  .deposit-total {
+    font-size: clamp(3.375rem, 5.25vw, 5.25rem);
+    letter-spacing: 0;
+  }
+  .ticket-details {
+    font-size: 1.5625rem;
+  }
+  .pool-ticket .action {
+    font-size: 0.875rem;
+    min-height: 3.375rem;
+  }
+  .pool-ticket .action-cap {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+  .promises {
+    font-size: 1.5625rem;
+  }
+  .fee-note {
+    font-size: 1.3125rem;
+    white-space: nowrap;
+  }
+  .claims-page h1 {
+    font-size: clamp(3.4375rem, 5.6vw, 6.25rem);
+    letter-spacing: 0;
+    margin-bottom: 1.25rem;
+  }
+  .sheet-actions {
+    gap: 1.125rem;
+  }
+  .sheet-actions > .pill {
+    min-height: 3.375rem;
+    font-size: 0.875rem;
+  }
+  .sheet-actions .action {
+    min-height: 3.375rem;
+  }
+  .qr-grid {
+    gap: 1.125rem;
+  }
+  .qr-card {
+    padding: 1.0625rem 0.9375rem 1.1875rem;
+  }
+  .qr-card-heading h2 {
+    font-size: clamp(1.4375rem, 1.9vw, 2.1875rem);
+    letter-spacing: 0;
+  }
+  .status-chip {
+    font-size: 0.625rem;
+    padding: 0.3125rem 0.625rem;
+  }
+  .claimed-art > span {
+    width: 67%;
+  }
+  .live-heading {
+    font-size: clamp(3.25rem, 6.3vw, 6.875rem);
+    letter-spacing: 0;
+    line-height: 1.23;
+    margin-bottom: 1.6875rem;
+  }
+  .claim-dots {
+    gap: 1.1875rem;
+  }
+  .where-card {
+    padding: 1.8125rem 1.875rem 1.5625rem;
+  }
+  .where-card dl > div {
+    padding: 1.0625rem 0;
+  }
+  .where-card dl > div:first-child {
+    padding-top: 0.875rem;
+  }
+  .where-card dt {
+    font-size: 4.125rem;
+  }
+  .where-card dd {
+    font-size: 1.5625rem;
+  }
+  .remaining-card {
+    padding: 1.5625rem 1.875rem;
+    margin-top: 1.375rem;
+  }
+  .remaining-card strong {
+    font-size: 3rem;
+    letter-spacing: 0;
+  }
+  .remaining-card p {
+    font-size: 1.5625rem;
+  }
+  .live-actions {
+    margin-top: 1.5rem;
+    gap: 1rem;
+  }
+  .live-actions .action {
+    font-size: 0.8125rem;
+    min-height: 3.3125rem;
+  }
+  .live-actions .action-cap {
+    width: 3.1875rem;
+    height: 3.1875rem;
+  }
+  .privacy-note {
+    font-size: 1.5rem;
+  }
+  .claims-badge {
+    height: 4rem;
+    width: 4rem;
+  }
+  .claims-badge strong {
+    font-size: 1.875rem;
+  }
+}
+@media (min-width: 900px) and (max-width: 1150px) {
+  .workspace {
+    padding-left: 2.375rem;
+    padding-right: 2.375rem;
+  }
+  .setup-fields h1 {
+    font-size: 6.1vw;
+  }
+  .split-buttons .pill {
+    min-width: 0;
+    font-size: 0.625rem;
+  }
+  .pool-ticket {
+    padding: 1.5rem;
+  }
+  .pool-ticket .action {
+    font-size: 0.6875rem;
+  }
+  .fee-note {
+    white-space: normal;
+    font-size: 1.1875rem;
+  }
+  .promises {
+    font-size: 1.3125rem;
+  }
+  .live-heading {
+    font-size: 5.7vw;
+  }
+  .where-card dt {
+    font-size: 3.4375rem;
+  }
+  .where-card dd {
+    font-size: 1.3125rem;
+  }
+  .where-card {
+    padding: 1.4375rem;
+  }
+  .remaining-card {
+    padding: 1.25rem;
+  }
+  .remaining-card strong {
+    font-size: 2.5rem;
+  }
+  .remaining-card p {
+    font-size: 1.375rem;
+  }
+  .live-actions .action {
+    font-size: 0.625rem;
+  }
+  .qr-card-heading {
+    flex-wrap: wrap;
+  }
+  .status-chip {
+    font-size: 0.5rem;
+  }
+  .hero-badge {
+    right: -1.875rem;
+    width: 7.25rem;
+    height: 7.25rem;
+  }
+  .hero-copy {
+    font-size: 1.4375rem;
+  }
+  .steps a {
+    min-width: 5.9375rem;
+    font-size: 0.75rem;
+  }
+  .steps svg {
+    width: 2.1875rem;
+  }
+  .sheet-actions > .pill {
+    font-size: 0.6875rem;
+  }
+  .qr-card {
+    padding: 0.8125rem 0.6875rem;
+  }
+  .privacy-note {
+    white-space: normal;
+    font-size: 1.3125rem;
+  }
+}
+@media (max-width: 599px) {
+  .recipient .site-header {
+    height: 5.625rem;
+  }
+  .claim-page {
+    min-height: calc(100svh - 6.625rem);
+  }
+  .claim-intro h1 {
+    font-size: clamp(4.0625rem, 19.1vw, 5.9375rem);
+    letter-spacing: 0;
+    line-height: 0.89;
+    margin-bottom: 0.5rem;
+  }
+  .claim-intro h1 mark {
+    margin-top: -0.125rem;
+    position: relative;
+    z-index: 1;
+    line-height: 1.05;
+    padding: 0.07em 0.08em 0.13em;
+  }
+  .claim-description {
+    font-size: 1.375rem;
+    line-height: 1.3;
+  }
+  .claim-hero-art {
+    margin-bottom: 2.0625rem;
+  }
+  .claim-kicker {
+    font-size: 1.4375rem;
+  }
+  .payout-content h1 {
+    font-size: clamp(4rem, 16.9vw, 5.25rem);
+    letter-spacing: 0;
+    line-height: 0.94;
+    margin-bottom: 1.5625rem;
+  }
+  .payout-option-heading strong {
+    font-size: clamp(1.5625rem, 7.1vw, 2.1875rem);
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .payout-option-heading .hand {
+    font-size: 1.375rem;
+  }
+  .payout-option-heading > .art {
+    height: 3.8125rem;
+  }
+  .payout-option-heading {
+    gap: 0.625rem;
+  }
+  .payout-option {
+    padding: 0.9375rem 1rem;
+    margin-bottom: 0.875rem;
+  }
+  .wallet-field {
+    margin-top: 1.0625rem;
+  }
+  .payout-privacy {
+    font-size: 1.3125rem;
+  }
+  .payout-bottom {
+    padding-top: 1.625rem;
+  }
+  .recipient-foot p {
+    font-size: 1.25rem;
+  }
+  .claim-bottom > .action {
+    min-height: 3.5rem;
+  }
+  .claim-bottom .action-cap {
+    width: 3.375rem;
+    height: 3.375rem;
+  }
+  .done-content h1 {
+    font-size: clamp(5.0625rem, 23vw, 6.75rem);
+    letter-spacing: 0;
+  }
+  .hero-cloud {
+    top: -2.375rem;
+  }
+  .hero-badge {
+    bottom: -4.4375rem;
+    right: 0.125rem;
+    width: 4.125rem;
+    height: 4.125rem;
+  }
+  .landing .hero-copy {
+    margin-top: 2.625rem;
+  }
+  .scenery {
+    bottom: -0.5rem;
+  }
+  .scene-cloud .art path:first-child {
+    fill: white;
+  }
+}
+@media (max-width: 369px) {
+  .claim-intro h1 {
+    font-size: 3.875rem;
+  }
+  .payout-option-heading strong {
+    font-size: 1.4375rem;
+  }
+  .payout-option-heading > .art {
+    width: 2.8125rem;
+  }
+  .payout-option-heading .hand {
+    font-size: 1.25rem;
+  }
+  .recipient-foot p {
+    font-size: 1.0625rem;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .claim-hero-art .coin-in-envelope,
+  .success-art .success-coin {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: coin-arrive 650ms var(--ease-out) both;
+  }
+  @keyframes coin-arrive {
+    0% {
+      transform: translateY(-1.125rem) rotate(-14deg);
+    }
+    60% {
+      transform: translateY(0.1875rem) rotate(4deg);
+    }
+    100% {
+      transform: translateY(0) rotate(0);
+    }
+  }
+}
+@media (min-width: 900px) {
+  .setup-fields h1 {
+    line-height: 1.02;
+  }
+  .claims-page h1 {
+    line-height: 1.02;
+  }
+  .live-heading {
+    line-height: 1.14;
+  }
+}
+@media (max-width: 599px) {
+  .claim-intro h1 {
+    font-size: clamp(3.875rem, 17.7vw, 5.625rem);
+  }
+  .claim-intro h1 mark {
+    margin-top: -0.75rem;
+    padding: 0.2em 0.08em 0.18em;
+  }
+  .claim-hero-art {
+    margin-bottom: 2.375rem;
+  }
+  .payout-option-heading .hand {
+    font-size: 1.3125rem;
+  }
+  .payout-option {
+    padding-top: 0.8125rem;
+    padding-bottom: 0.8125rem;
+  }
+  .payout-option-heading > .art {
+    height: 3.5625rem;
+  }
+  .wallet-field {
+    margin-top: 0.9375rem;
+  }
+  .payout-option-heading strong {
+    font-size: clamp(1.5625rem, 7.3vw, 2.1875rem);
+  }
+}
+
+.action-cap svg {
+  width: 1.4375rem;
+  height: 1.4375rem;
+}
+.check-mini svg {
+  width: 75%;
+  height: 75%;
+}
+.circle-button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.claimed-art > span > svg {
+  width: 60%;
+  height: 60%;
+}
+.claim-dot {
+  position: relative;
+}
+.claim-dot::after {
+  content: '';
+  position: absolute;
+  inset: -0.1875rem;
+  border-radius: 50%;
+}
+@media (max-width: 599px) {
+  .success-art {
+    height: 13.125rem;
+    margin-bottom: 0.875rem;
+  }
+  .done-content h1 {
+    font-size: clamp(5rem, 21vw, 6.75rem);
+    margin-top: -1rem;
+  }
+  .done-checklist {
+    font-size: 1.375rem;
+    gap: 0.8125rem;
+  }
+  .claim-done .claim-bottom {
+    padding-top: 0.625rem;
+  }
+}
+
+@media (max-width: 599px) {
+  .hero-badge {
+    width: 3.5rem;
+    height: 3.5rem;
+    bottom: -3rem;
+  }
+  .landing .hero-copy {
+    margin-top: 3.5rem;
+  }
+}

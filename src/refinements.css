@@ -1,0 +1,1688 @@
+/* Compact application scale, shared page rhythm, and the expanded product story. */
+:root {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  scroll-padding-top: 2rem;
+}
+.desktop-nav {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 2rem;
+  height: 2.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.desktop-nav a {
+  padding: 0.5rem 0;
+  text-underline-offset: 0.35em;
+}
+.desktop-nav a[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-color: var(--lime);
+  text-decoration-thickness: 3px;
+}
+.site-header:has(.steps) .desktop-nav,
+.recipient .desktop-nav {
+  display: none;
+}
+.workspace {
+  max-width: 86rem;
+}
+.marketing-page h2,
+.closing-cta h2 {
+  font-size: clamp(2.5rem, 5.1vw, 4.7rem);
+  line-height: 1.08;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.marketing-page h3 {
+  font-family: Anton, sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.12;
+}
+.marketing-page mark {
+  border-radius: 0.25rem;
+  padding: 0 0.07em 0.05em;
+}
+.marketing-page .landing {
+  min-height: min(52rem, calc(100svh - 7rem));
+  padding: 2.5rem 2rem 17rem;
+  overflow: clip;
+  text-align: center;
+}
+.marketing-page .landing h1 {
+  font-size: clamp(3.8rem, 7.7vw, 7.2rem);
+  letter-spacing: 0;
+  line-height: 1.02;
+}
+.marketing-page .hero-intro {
+  font-size: 1.55rem;
+  margin-bottom: 1.2rem;
+}
+.marketing-page .hero-copy {
+  font-size: 1.55rem;
+  line-height: 1.3;
+  margin: 1.9rem auto 1.5rem;
+  max-width: 45rem;
+}
+.marketing-page .hero-cloud {
+  width: 5.6rem;
+  height: 5rem;
+  left: -1rem;
+  top: 2.2rem;
+}
+.marketing-page .hero-badge {
+  width: 7.2rem;
+  height: 7.2rem;
+  right: -3.2rem;
+  bottom: -2.5rem;
+}
+.hero-smallprint {
+  display: flex;
+  justify-content: center;
+  gap: 1.3rem;
+  font-size: 0.73rem;
+  color: var(--muted);
+  margin-top: 1rem;
+}
+.hero-smallprint span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.scroll-cue {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.7rem;
+  width: fit-content;
+  margin: 1.6rem auto 0;
+  position: relative;
+  z-index: 4;
+}
+.scroll-cue .hand {
+  font-size: 1.2rem;
+}
+.scroll-cue > svg {
+  transform: rotate(90deg);
+}
+.toy-hint {
+  position: absolute;
+  bottom: 13.2rem;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  transform: rotate(-2deg);
+}
+.scenery {
+  height: 15rem;
+  bottom: -1.5rem;
+  z-index: 3;
+  pointer-events: none;
+  overflow: visible;
+  isolation: isolate;
+}
+.scenery > .scene-toy {
+  pointer-events: auto;
+  cursor: grab;
+  border: 0;
+  padding: 0;
+  outline-offset: 0.4rem;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: none;
+  display: block;
+}
+.scene-toy[data-dragging] {
+  z-index: 30 !important;
+  cursor: grabbing;
+}
+.scene-toy:focus-visible {
+  z-index: 31;
+  outline: 3px dashed #43876a;
+}
+.scene-piece {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 75%;
+}
+.scene-piece > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.scene-toy .art {
+  pointer-events: none;
+}
+.scene-cloud .art path:first-child {
+  fill: white;
+}
+.scenery .scene-coin {
+  width: 9.8rem;
+  height: 9.8rem;
+}
+.scenery .scene-qr {
+  width: 9rem;
+  height: 11rem;
+}
+.scenery .scene-shield {
+  width: 10rem;
+  height: 11rem;
+}
+.scenery .scene-letter {
+  width: 11.5rem;
+  height: 10rem;
+}
+.scenery .scene-gift {
+  width: 11rem;
+  height: 12rem;
+}
+.scenery .scene-plane {
+  width: 11.5rem;
+  height: 11.5rem;
+}
+.scenery .scene-cloud {
+  width: 13rem;
+  height: 13rem;
+}
+.scenery .scene-qr.first {
+  left: 12%;
+}
+.scenery .scene-shield.first {
+  left: 24%;
+}
+.scenery .scene-letter.first {
+  left: 36%;
+}
+.scenery .scene-gift {
+  left: 54%;
+}
+.scenery .scene-plane {
+  left: 64%;
+}
+.scenery .scene-cloud {
+  right: -1%;
+}
+.product-story,
+.marketing-section {
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 6.5rem 4rem;
+}
+.product-story {
+  padding-top: 6rem;
+}
+.story-opening {
+  max-width: 59rem;
+  margin: 0 auto 4.5rem;
+  text-align: center;
+}
+.story-opening > .hand,
+.section-heading > .hand,
+.occasions > .hand,
+.closing-cta > .hand {
+  font-size: 1.6rem;
+  margin-bottom: 1.1rem;
+}
+.story-opening > p:last-child,
+.section-heading > p:not(.hand) {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.8;
+  color: var(--muted);
+  max-width: 36rem;
+  margin-top: 1.7rem;
+}
+.story-opening > p:last-child {
+  margin-left: auto;
+  margin-right: auto;
+}
+.story-steps {
+  border-top: 2px solid black;
+}
+.story-step {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 5rem;
+  align-items: center;
+  min-height: 24rem;
+  padding: 3rem 1.5rem;
+  border-bottom: 1px dashed #94988a;
+}
+.step-number {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+.step-text > p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 34rem;
+  margin-top: 1.3rem;
+}
+.step-note {
+  display: block;
+  font-size: 1.3rem;
+  margin-top: 1.2rem;
+  transform: rotate(-2deg);
+}
+.step-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 17rem;
+  background: #f4f5ef;
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+.step-visual > .art {
+  width: 11rem;
+  height: 12rem;
+}
+.story-step:nth-child(2) .step-visual {
+  background: var(--yellow);
+}
+.story-step:nth-child(3) .step-visual {
+  background: var(--lime);
+}
+.story-ticket-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  font-weight: 800;
+  margin-top: 1rem;
+}
+.story-arrow {
+  position: absolute;
+  width: 5rem;
+  height: 4rem;
+  left: -3rem;
+  top: 1rem;
+  transform: rotate(15deg);
+}
+.payout-story {
+  padding-top: 4rem;
+}
+.payout-story > .section-heading {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 4rem;
+  align-items: end;
+}
+.payout-story > .section-heading > .hand {
+  grid-column: 1/-1;
+}
+.payout-story > .section-heading > p:not(.hand) {
+  margin-top: 0;
+  padding-bottom: 0.3rem;
+}
+.payout-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.payout-feature {
+  border: 2px solid black;
+  border-radius: 1rem;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 5rem 1fr;
+  gap: 1.4rem;
+  transition: transform 180ms var(--ease-out);
+}
+.payout-feature > .art {
+  width: 5rem;
+  height: 6rem;
+}
+.wallet-feature {
+  background: var(--lime);
+}
+.gift-feature {
+  background: var(--yellow);
+}
+.payout-feature h3 {
+  font-size: 2.5rem;
+}
+.payout-feature p {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.7;
+  margin-top: 1.2rem;
+}
+.feature-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 800;
+  font-size: 0.69rem;
+  letter-spacing: 0.045em;
+  margin-top: 1.7rem;
+}
+.privacy-story {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 6rem;
+  align-items: center;
+}
+.privacy-drawing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.privacy-drawing > .art {
+  width: 15rem;
+  height: 17rem;
+  transform: rotate(-8deg);
+}
+.privacy-drawing > .hand {
+  font-size: 1.8rem;
+  text-align: center;
+  transform: rotate(-6deg);
+}
+.privacy-story h2 {
+  font-size: clamp(2.5rem, 4.1vw, 4rem);
+}
+.privacy-story ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 1.7rem;
+}
+.privacy-story li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.inline-link {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+  line-height: 1.5;
+}
+.privacy-story .inline-link {
+  margin-top: 2rem;
+}
+.occasions {
+  text-align: center;
+  border-top: 1px dashed #94988a;
+  border-bottom: 1px dashed #94988a;
+  max-width: none;
+  padding-left: max(2rem, calc((100vw - 70rem) / 2));
+  padding-right: max(2rem, calc((100vw - 70rem) / 2));
+  background: #f7f8f1;
+}
+.occasion-list {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  max-width: 52rem;
+  margin: 2.8rem auto 0;
+}
+.occasion-list span {
+  border: 1.5px solid black;
+  border-radius: 999px;
+  padding: 0.85rem 1.3rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transform: rotate(-2deg);
+  background: white;
+}
+.occasion-list span:nth-child(even) {
+  transform: rotate(2deg);
+  background: var(--yellow);
+}
+.occasion-list span:last-child {
+  background: var(--mint);
+}
+.faq-section {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 6rem;
+}
+.faq-section .inline-link {
+  margin-top: 2rem;
+}
+.faq-list {
+  border-top: 2px solid black;
+}
+.faq-list details {
+  border-bottom: 1px solid #b6b9ac;
+  padding: 1.4rem 0;
+}
+.faq-list summary {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+.faq-list summary::-webkit-details-marker {
+  display: none;
+}
+.faq-list summary > span {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid black;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.faq-list details[open] summary > span {
+  background: var(--lime);
+  transform: rotate(45deg);
+}
+.faq-list details > p {
+  font-size: 0.93rem;
+  font-weight: 500;
+  line-height: 1.8;
+  color: var(--muted);
+  padding: 1rem 2.7rem 0 0;
+}
+.closing-cta {
+  position: relative;
+  padding: 5.5rem 2rem 6rem;
+  text-align: center;
+  background: var(--lime);
+  border-top: 2px solid black;
+  border-bottom: 2px solid black;
+  overflow: hidden;
+}
+.closing-cta > .art {
+  position: absolute;
+  width: 8rem;
+  height: 8rem;
+  right: 10%;
+  top: 6rem;
+  transform: rotate(12deg);
+}
+.closing-cta h2 {
+  font-size: clamp(3rem, 6vw, 5rem);
+  max-width: 57rem;
+  margin: 0 auto;
+}
+.closing-cta > .action {
+  background: black;
+  color: white;
+  margin-top: 2.2rem;
+  border-color: black;
+}
+.closing-cta .action-cap {
+  background: white;
+  color: black;
+}
+.closing-demo {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 1.2rem;
+}
+.site-footer {
+  position: relative;
+  max-width: 86rem;
+  margin: auto;
+  padding: 3.2rem 4rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr;
+  align-items: center;
+  gap: 2rem;
+}
+.footer-wordmark {
+  font-family: Anton;
+  font-size: 2.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: fit-content;
+}
+.footer-wordmark > svg {
+  width: 2.4rem;
+  height: 2.4rem;
+  color: #5baf87;
+}
+.site-footer > .hand {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+.site-footer nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.footer-demo {
+  grid-column: 1/-1;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--muted);
+  padding-top: 1.5rem;
+  border-top: 1px solid #d8dacd;
+}
+/* Supporting pages use the same restrained heading and control sizes. */
+.page-heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.page-introduction {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 1.5rem;
+}
+.rooms-page,
+.guide-page,
+.claim-entry-page {
+  padding-bottom: 5rem;
+  min-height: calc(100svh - 18rem);
+}
+.room-overview {
+  border: 2px solid black;
+  border-radius: 1rem;
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  margin-top: 3rem;
+  overflow: hidden;
+}
+.room-overview-main {
+  padding: 2.5rem;
+}
+.room-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+.room-overview h2 {
+  font-size: 2.8rem;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.room-overview-main > .hand {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin-top: 0.8rem;
+}
+.room-progress {
+  height: 0.8rem;
+  background: #eceee5;
+  border: 1.5px solid black;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+.room-progress > span {
+  display: block;
+  background: var(--mint);
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+}
+.room-progress-copy {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  font-size: 0.8rem;
+}
+.room-progress-copy > span {
+  color: var(--muted);
+}
+.room-overview-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+.room-summary {
+  background: var(--yellow);
+  padding: 2rem;
+  border-left: 2px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.room-summary > .art {
+  width: 6rem;
+  height: 6rem;
+  margin: 0 auto 1.4rem;
+}
+.room-summary dl {
+  display: grid;
+  gap: 1.2rem;
+}
+.room-summary dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+.room-summary dt {
+  font-weight: 500;
+}
+.room-summary dd {
+  font-weight: 800;
+}
+.room-help-strip {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.8rem;
+  font-size: 0.9rem;
+}
+.room-help-strip > p {
+  font-weight: 500;
+}
+.room-help-strip > .inline-link {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.demo-explainer {
+  border-top: 1px dashed #959a89;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  max-width: 49rem;
+}
+.demo-explainer > .hand {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+.demo-explainer > p:last-child {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  font-weight: 500;
+}
+.room-closed {
+  background: black !important;
+  color: white;
+}
+.claim-entry-page {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 6rem;
+  align-items: center;
+  padding-top: 3rem;
+}
+.claim-entry-copy > p:not(.hand) {
+  font-size: 1rem;
+  line-height: 1.8;
+  max-width: 35rem;
+  margin-top: 1.5rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+.claim-entry-copy form {
+  margin-top: 2rem;
+  max-width: 35rem;
+}
+.claim-entry-copy input {
+  display: block;
+  width: 100%;
+  border: 2px solid black;
+  border-radius: 0.75rem;
+  margin: 0.65rem 0 1rem;
+  padding: 1rem;
+  font-size: 1rem;
+  background: white;
+  min-height: 3.3rem;
+}
+.entry-privacy {
+  font-size: 1.35rem;
+  color: var(--muted);
+  margin-top: 1rem;
+}
+.entry-demo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.claim-entry-art > .art {
+  width: 100%;
+  height: 19rem;
+}
+.claim-entry-art > .hand {
+  display: block;
+  text-align: center;
+  font-size: 2rem;
+  transform: rotate(-5deg);
+  margin-top: 2rem;
+}
+.guide-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+.guide-heading > .art {
+  width: 11rem;
+  height: 12rem;
+  margin-right: 3rem;
+  transform: rotate(8deg);
+  flex-shrink: 0;
+}
+.walkthrough {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 63rem;
+}
+.walkthrough > li {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 1.5rem;
+  border-top: 1px dashed #94988a;
+  padding: 2rem 0;
+}
+.walkthrough-number {
+  font-family: Anton;
+  font-size: 2.5rem;
+  color: #5b806c;
+}
+.walkthrough h2,
+.privacy-guide h2,
+.guide-faq > h2 {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+.walkthrough p,
+.privacy-guide p {
+  font-size: 1rem;
+  line-height: 1.8;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 1rem;
+  max-width: 48rem;
+}
+.privacy-guide {
+  max-width: 61rem;
+  display: grid;
+  gap: 2.5rem;
+}
+.privacy-guide section {
+  border-top: 1px dashed #94988a;
+  padding-top: 2rem;
+}
+.guide-faq {
+  max-width: 63rem;
+  margin-top: 4rem;
+}
+.guide-faq > .faq-list {
+  margin-top: 1.5rem;
+}
+.guide-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 3.5rem;
+}
+.guide-cta > .hand {
+  width: 100%;
+  font-size: 1.6rem;
+  margin-bottom: 0.4rem;
+}
+@media (min-width: 900px) {
+  :root {
+    font-size: 14px;
+  }
+  .workspace {
+    max-width: 88rem;
+    padding-top: 2rem;
+  }
+  .site-header {
+    height: 6.4rem;
+    padding: 1.65rem 2.5rem;
+  }
+  .brand {
+    width: 3.3rem;
+    height: 3.6rem;
+  }
+  .menu-button {
+    font-size: 0.75rem;
+    min-height: 2.8rem;
+    min-width: 6rem;
+  }
+  .steps {
+    top: 1.65rem;
+  }
+  .steps a {
+    font-size: 0.78rem;
+    min-height: 2.8rem;
+    min-width: 7rem;
+  }
+  .workspace h1,
+  .setup-fields h1,
+  .claims-page h1 {
+    font-size: clamp(2.8rem, 4.6vw, 4.6rem);
+    line-height: 1.1;
+    letter-spacing: 0;
+    white-space: normal;
+  }
+  .live-heading {
+    font-size: clamp(2.6rem, 4.3vw, 4.4rem);
+    line-height: 1.3;
+  }
+  .intro {
+    font-size: 1.65rem;
+  }
+  .action,
+  .pill {
+    font-size: 0.78rem;
+    min-height: 3.2rem;
+  }
+  .action-cap {
+    width: 3.05rem;
+    height: 3.05rem;
+  }
+  .split-buttons .pill {
+    min-width: 0;
+    flex: 1;
+    max-width: 14rem;
+    font-size: 0.75rem;
+  }
+  .ticket-side {
+    padding-top: 0.5rem;
+  }
+  .pool-ticket {
+    padding: 2rem;
+  }
+  .deposit-total {
+    font-size: 4.4rem;
+  }
+  .fee-note {
+    white-space: normal;
+    font-size: 1.3rem;
+  }
+  .pool-ticket .action {
+    font-size: 0.78rem;
+    min-height: 3.2rem;
+  }
+  .pool-ticket .action-cap {
+    width: 3.05rem;
+    height: 3.05rem;
+  }
+  .promises {
+    font-size: 1.45rem;
+  }
+  .gift-toggle .hand {
+    font-size: 1.35rem;
+    white-space: normal;
+  }
+  .setup-grid,
+  .live-grid {
+    gap: 3.5rem;
+    grid-template-columns: minmax(0, 1.5fr) minmax(22rem, 1fr);
+  }
+  .sheet-actions > .pill {
+    font-size: 0.78rem;
+    min-height: 3.2rem;
+  }
+  .sheet-actions .action {
+    min-height: 3.2rem;
+  }
+  .qr-card-heading h2 {
+    font-size: 1.65rem;
+  }
+  .qr-card-foot {
+    font-size: 1.4rem;
+  }
+  .qr-card-foot .muted {
+    font-size: 1.25rem;
+  }
+  .status-chip {
+    font-size: 0.6rem;
+  }
+  .where-card dt {
+    font-size: 3.8rem;
+  }
+  .where-card dd {
+    font-size: 1.45rem;
+  }
+  .remaining-card strong {
+    font-size: 2.8rem;
+  }
+  .remaining-card p {
+    font-size: 1.45rem;
+  }
+  .privacy-note {
+    font-size: 1.45rem;
+    white-space: normal;
+  }
+  .live-actions .action {
+    font-size: 0.75rem;
+    min-height: 3.2rem;
+  }
+  .live-actions .action-cap {
+    width: 3.05rem;
+    height: 3.05rem;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .desktop-nav a:hover,
+  .site-footer nav a:hover {
+    text-decoration: underline;
+  }
+  .payout-feature:hover {
+    transform: translateY(-4px);
+  }
+  .inline-link:hover {
+    color: #387657;
+  }
+}
+@media (max-width: 899px) {
+  .desktop-nav {
+    gap: 1.2rem;
+    margin-right: 1.4rem;
+    font-size: 0.75rem;
+  }
+  .marketing-page .landing {
+    padding-top: 3rem;
+    padding-bottom: 15rem;
+    min-height: 48rem;
+  }
+  .marketing-page .landing h1 {
+    font-size: 8.7vw;
+  }
+  .marketing-page .hero-badge {
+    width: 5.5rem;
+    height: 5.5rem;
+    right: -1rem;
+    bottom: -3rem;
+  }
+  .marketing-page .hero-cloud {
+    top: -2.5rem;
+    width: 5rem;
+    height: 4rem;
+  }
+  .marketing-page .hero-copy {
+    font-size: 1.4rem;
+    margin-top: 2.3rem;
+  }
+  .toy-hint {
+    bottom: 12rem;
+  }
+  .scenery > .scene-toy {
+    scale: 0.8;
+    transform-origin: bottom center;
+  }
+  .product-story,
+  .marketing-section {
+    padding: 4rem 2rem;
+  }
+  .story-opening {
+    margin-bottom: 3rem;
+  }
+  .story-step {
+    gap: 2rem;
+    padding: 2.5rem 0;
+  }
+  .step-visual {
+    min-height: 15rem;
+  }
+  .step-text > p {
+    font-size: 0.9rem;
+  }
+  .step-note {
+    font-size: 1.2rem;
+  }
+  .payout-story > .section-heading {
+    gap: 2rem;
+  }
+  .payout-feature {
+    padding: 1.5rem;
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+  .payout-feature > .art {
+    width: 4rem;
+    height: 5rem;
+  }
+  .payout-feature h3 {
+    font-size: 2.2rem;
+  }
+  .privacy-story,
+  .faq-section {
+    gap: 2.5rem;
+  }
+  .privacy-drawing > .art {
+    width: 11rem;
+    height: 14rem;
+  }
+  .privacy-story h2 {
+    font-size: 2.8rem;
+  }
+  .site-footer {
+    padding: 2.5rem 2rem;
+    gap: 1.5rem;
+  }
+  .footer-wordmark {
+    font-size: 2rem;
+  }
+  .site-footer > .hand {
+    font-size: 1.25rem;
+  }
+  .site-footer nav {
+    font-size: 0.7rem;
+    gap: 1rem;
+  }
+  .claim-entry-page {
+    gap: 2rem;
+  }
+  .claim-entry-art > .art {
+    height: 15rem;
+  }
+  .claim-entry-copy h1,
+  .guide-page h1,
+  .rooms-page h1 {
+    font-size: 3.4rem;
+  }
+  .room-overview-main {
+    padding: 2rem;
+  }
+  .room-summary {
+    padding: 1.5rem;
+  }
+  .room-help-strip {
+    flex-wrap: wrap;
+  }
+  .room-help-strip > .inline-link {
+    margin-left: 0;
+  }
+  .guide-heading > .art {
+    width: 8rem;
+    height: 9rem;
+    margin-right: 0;
+  }
+}
+@media (max-width: 599px) {
+  .desktop-nav {
+    display: none;
+  }
+  .marketing-page .landing {
+    padding: 3rem 1rem 14rem;
+    min-height: 48rem;
+  }
+  .marketing-page .landing h1 {
+    font-size: 10.1vw;
+    line-height: 1.1;
+  }
+  .marketing-page .hero-intro {
+    font-size: 1.13rem;
+    margin-bottom: 1.2rem;
+  }
+  .marketing-page .hero-cloud {
+    width: 3.7rem;
+    height: 3.2rem;
+    top: -2.7rem;
+    left: 0;
+  }
+  .marketing-page .hero-badge {
+    width: 3.4rem;
+    height: 3.4rem;
+    right: 0.5rem;
+    bottom: -3.6rem;
+  }
+  .marketing-page .hero-copy {
+    font-size: 1.3rem;
+    margin: 4rem auto 1.5rem;
+    max-width: 20rem;
+    padding: 0;
+  }
+  .marketing-page .hero-actions {
+    gap: 0.75rem;
+  }
+  .hero-smallprint {
+    gap: 0.8rem;
+    font-size: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .scroll-cue {
+    margin-top: 1.2rem;
+    gap: 0.35rem;
+  }
+  .scroll-cue .hand {
+    font-size: 1.05rem;
+  }
+  .scroll-cue > svg {
+    width: 1rem;
+  }
+  .toy-hint {
+    bottom: 10rem;
+    font-size: 1.02rem;
+  }
+  .scenery {
+    height: 12rem;
+    bottom: -1.5rem;
+  }
+  .scenery > .scene-toy {
+    scale: 0.65;
+  }
+  .scenery .scene-coin.first {
+    left: -10%;
+    bottom: 0;
+  }
+  .scenery .scene-qr.first {
+    left: 3%;
+    bottom: -1rem;
+  }
+  .scenery .scene-shield.first {
+    left: 25%;
+    bottom: -0.8rem;
+  }
+  .scenery .scene-letter.first {
+    left: 45%;
+    bottom: -1rem;
+  }
+  .scenery .scene-gift {
+    left: 63%;
+    bottom: 0.1rem;
+  }
+  .scenery .scene-plane {
+    display: block;
+    left: 55%;
+    bottom: 1rem;
+    scale: 0.4;
+  }
+  .scenery .scene-cloud {
+    right: -25%;
+    bottom: -0.5rem;
+  }
+  .scenery .scene-shield.second {
+    left: 68%;
+    bottom: -4rem;
+  }
+  .scenery .scene-coin.second {
+    left: 45%;
+    bottom: -3rem;
+  }
+  .scenery .scene-qr.second {
+    display: block;
+    right: -15%;
+    bottom: -2rem;
+    scale: 0.4;
+  }
+  .scenery .scene-flower {
+    left: 38%;
+    bottom: 0.6rem;
+  }
+  .scenery .scene-smile {
+    left: 15%;
+    bottom: -2.5rem;
+  }
+  .product-story,
+  .marketing-section {
+    padding: 3.5rem 1.5rem;
+  }
+  .marketing-page h2 {
+    font-size: 2.7rem;
+    line-height: 1.1;
+  }
+  .story-opening {
+    text-align: left;
+    margin-bottom: 2.5rem;
+  }
+  .story-opening > .hand,
+  .section-heading > .hand,
+  .occasions > .hand,
+  .closing-cta > .hand {
+    font-size: 1.3rem;
+    margin-bottom: 0.85rem;
+  }
+  .story-opening > p:last-child,
+  .section-heading > p:not(.hand) {
+    font-size: 0.9rem;
+    line-height: 1.75;
+    margin-top: 1.3rem;
+  }
+  .story-step {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+    padding: 2.5rem 0;
+    min-height: 0;
+  }
+  .step-text > h3 {
+    font-size: 2.15rem;
+  }
+  .step-text > p {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+  .step-number {
+    margin-bottom: 0.7rem;
+  }
+  .step-visual {
+    min-height: 13rem;
+    padding: 1.2rem;
+  }
+  .step-visual > .art {
+    height: 10rem;
+    width: 10rem;
+  }
+  .story-ticket-label {
+    font-size: 0.65rem;
+  }
+  .story-arrow {
+    left: auto;
+    right: 0;
+    top: -1.5rem;
+    transform: rotate(85deg);
+    width: 4rem;
+  }
+  .payout-story > .section-heading {
+    display: block;
+  }
+  .payout-story > .section-heading > p:not(.hand) {
+    margin-top: 1.3rem;
+  }
+  .payout-comparison {
+    grid-template-columns: 1fr;
+    margin-top: 2rem;
+    gap: 1rem;
+  }
+  .payout-feature {
+    grid-template-columns: 3.5rem 1fr;
+    padding: 1.4rem;
+    gap: 1rem;
+  }
+  .payout-feature > .art {
+    width: 3.5rem;
+    height: 4.5rem;
+  }
+  .payout-feature h3 {
+    font-size: 1.9rem;
+  }
+  .payout-feature p {
+    font-size: 0.87rem;
+    margin-top: 0.8rem;
+  }
+  .feature-link {
+    font-size: 0.6rem;
+    margin-top: 1rem;
+  }
+  .privacy-story {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  .privacy-drawing {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+  .privacy-drawing > .art {
+    width: 7rem;
+    height: 8rem;
+  }
+  .privacy-drawing > .hand {
+    font-size: 1.5rem;
+  }
+  .privacy-story .section-heading {
+    width: 100%;
+  }
+  .privacy-story h2 {
+    font-size: 2.4rem;
+  }
+  .privacy-story ul {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    gap: 0.8rem;
+  }
+  .privacy-story .inline-link {
+    margin-top: 1.5rem;
+  }
+  .occasion-list {
+    margin-top: 2rem;
+    gap: 0.65rem;
+  }
+  .occasion-list span {
+    font-size: 0.75rem;
+    padding: 0.7rem 1rem;
+  }
+  .faq-section {
+    display: block;
+  }
+  .faq-section .inline-link {
+    margin-top: 1.3rem;
+    margin-bottom: 2rem;
+  }
+  .faq-list summary {
+    font-size: 0.9rem;
+  }
+  .faq-list details {
+    padding: 1.2rem 0;
+  }
+  .faq-list details > p {
+    font-size: 0.86rem;
+    padding-right: 1rem;
+  }
+  .closing-cta {
+    padding: 3.5rem 1.5rem;
+  }
+  .closing-cta h2 {
+    font-size: 2.8rem;
+  }
+  .closing-cta > .art {
+    width: 4rem;
+    height: 4rem;
+    right: -0.5rem;
+    top: 6.5rem;
+  }
+  .closing-cta > .hand {
+    max-width: 17rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .closing-demo {
+    font-size: 0.7rem;
+    max-width: 18rem;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.7;
+  }
+  .site-footer {
+    grid-template-columns: 1fr 1fr;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+  }
+  .site-footer > .hand {
+    font-size: 1.15rem;
+    text-align: right;
+  }
+  .site-footer nav {
+    grid-column: 1/-1;
+    gap: 1rem;
+    font-size: 0.75rem;
+  }
+  .footer-wordmark {
+    font-size: 1.8rem;
+    gap: 0.5rem;
+  }
+  .footer-wordmark > svg {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+  .footer-demo {
+    font-size: 0.52rem;
+  }
+  .page-heading-row {
+    display: block;
+  }
+  .page-heading-row > .action {
+    margin-top: 1.5rem;
+  }
+  .page-introduction {
+    font-size: 0.9rem;
+    margin-top: 1.2rem;
+  }
+  .rooms-page,
+  .guide-page,
+  .claim-entry-page {
+    padding-bottom: 3rem;
+  }
+  .room-overview {
+    grid-template-columns: 1fr;
+    margin-top: 2rem;
+  }
+  .room-overview-main {
+    padding: 1.5rem;
+  }
+  .room-overview h2 {
+    font-size: 2.2rem;
+  }
+  .room-overview-main > .hand {
+    font-size: 1.3rem;
+  }
+  .room-status-row .label {
+    font-size: 0.6rem;
+  }
+  .room-progress-copy {
+    font-size: 0.7rem;
+  }
+  .room-overview-actions {
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .room-overview-actions .action {
+    font-size: 0.65rem;
+  }
+  .room-overview-actions .action-label {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .room-summary {
+    border-left: 0;
+    border-top: 2px solid black;
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .room-summary > .art {
+    width: 4rem;
+    height: 4rem;
+    margin: 0;
+  }
+  .room-summary dl {
+    gap: 0.8rem;
+  }
+  .room-summary dl > div {
+    font-size: 0.75rem;
+  }
+  .room-help-strip {
+    font-size: 0.8rem;
+    gap: 0.7rem;
+  }
+  .room-help-strip > svg {
+    flex-shrink: 0;
+  }
+  .room-help-strip > p {
+    max-width: 15rem;
+  }
+  .room-help-strip > .inline-link {
+    font-size: 0.72rem;
+  }
+  .demo-explainer {
+    margin-top: 2rem;
+  }
+  .demo-explainer > p:last-child {
+    font-size: 0.82rem;
+  }
+  .claim-entry-page {
+    display: flex;
+    flex-direction: column-reverse;
+    padding-top: 1rem;
+    gap: 1.8rem;
+  }
+  .claim-entry-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+  }
+  .claim-entry-art > .art {
+    width: 10rem;
+    height: 9rem;
+  }
+  .claim-entry-art > .hand {
+    font-size: 1.35rem;
+    margin-top: 0;
+  }
+  .claim-entry-copy {
+    width: 100%;
+  }
+  .claim-entry-copy h1,
+  .guide-page h1,
+  .rooms-page h1 {
+    font-size: 2.8rem;
+    line-height: 1.15;
+  }
+  .claim-entry-copy > p:not(.hand) {
+    font-size: 0.9rem;
+    margin-top: 1.2rem;
+    line-height: 1.7;
+  }
+  .claim-entry-copy form {
+    margin-top: 1.5rem;
+  }
+  .claim-entry-copy input {
+    font-size: 1rem;
+    padding: 0.9rem;
+  }
+  .entry-privacy {
+    font-size: 1.2rem;
+  }
+  .entry-demo {
+    font-size: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  .guide-heading {
+    gap: 1rem;
+    align-items: flex-start;
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  .guide-heading > .art {
+    position: absolute;
+    right: 0;
+    top: -0.4rem;
+    width: 3.3rem;
+    height: 3.6rem;
+    opacity: 0.9;
+  }
+  .guide-heading .intro {
+    max-width: 14rem;
+    font-size: 1.25rem;
+    margin-bottom: 1.3rem;
+  }
+  .walkthrough > li {
+    grid-template-columns: 2rem 1fr;
+    gap: 1rem;
+    padding: 1.5rem 0;
+  }
+  .walkthrough-number {
+    font-size: 1.8rem;
+  }
+  .walkthrough h2,
+  .privacy-guide h2,
+  .guide-faq > h2 {
+    font-size: 1.65rem;
+  }
+  .walkthrough p,
+  .privacy-guide p {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    margin-top: 0.8rem;
+  }
+  .privacy-guide {
+    gap: 1.7rem;
+  }
+  .privacy-guide section {
+    padding-top: 1.5rem;
+  }
+  .guide-cta {
+    margin-top: 2.5rem;
+  }
+  .guide-cta > .hand {
+    font-size: 1.4rem;
+  }
+  .guide-cta .action {
+    font-size: 0.65rem;
+  }
+  .guide-cta .action-label {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    scroll-behavior: auto;
+  }
+  .scene-piece {
+    transform: none !important;
+  }
+  .payout-feature:hover {
+    transform: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .desktop-nav {
+    font-size: 0.9rem;
+  }
+  .site-footer nav {
+    font-size: 0.85rem;
+  }
+  .action,
+  .pill,
+  .pool-ticket .action,
+  .sheet-actions > .pill,
+  .live-actions .action {
+    font-size: 0.85rem;
+  }
+}
+.menu-panel {
+  max-height: calc(100svh - 7rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.intro,
+.claim-description {
+  overflow-wrap: anywhere;
+}
+.claim-intro h1 mark.long-amount {
+  font-size: 0.72em;
+}
+.sample-claim-badge {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  border: 1px solid black;
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.5rem;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  background: var(--yellow);
+}
