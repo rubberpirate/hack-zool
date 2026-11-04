@@ -6,9 +6,11 @@
   >
   <p class="hand">Pay the room.<br />Collect nothing.</p>
   <nav aria-label="Footer">
-    <a href="/how-it-works">How it works</a><a href="/privacy">Privacy, plainly</a><a href="/rooms"
-      >Your room</a
-    ><a href="/claim">Open a claim</a>
+    <a href="/room/new">Pay a room</a>
+    <a href="/claim">Open a claim</a>
+    <a href="/rooms">Your room</a>
+    <a href="/how-it-works">How it works</a>
+    <a href="/privacy">Privacy, plainly</a>
   </nav>
   <span class="footer-demo">FRONTEND DEMO · NO REAL FUNDS</span>
 </footer>

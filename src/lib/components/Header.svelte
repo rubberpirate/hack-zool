@@ -66,12 +66,13 @@
           >{/if}{/each}
     </nav>{/if}
   <nav class="desktop-nav" aria-label="Site navigation">
-    <a href="/how-it-works" aria-current={path === '/how-it-works' ? 'page' : undefined}
-      >How it works</a
-    ><a href="/privacy" aria-current={path === '/privacy' ? 'page' : undefined}>Privacy</a><a
-      href="/rooms"
-      aria-current={path === '/rooms' ? 'page' : undefined}>Your room</a
-    >
+    <a href="/room/new" class="nav-cta" aria-current={path.startsWith('/room/new') ? 'page' : undefined}>
+      <Icon name="plus" size={14} /> Pay a room
+    </a>
+    <a href="/claim" aria-current={path === '/claim' ? 'page' : undefined}>Open a claim</a>
+    <a href="/rooms" aria-current={path === '/rooms' ? 'page' : undefined}>Your room</a>
+    <a href="/how-it-works" aria-current={path === '/how-it-works' ? 'page' : undefined}>How it works</a>
+    <a href="/privacy" aria-current={path === '/privacy' ? 'page' : undefined}>Privacy</a>
   </nav>
   <div class="menu-wrap">
     <button
@@ -88,11 +89,12 @@
         aria-label="Main navigation"
         transition:scale={{ duration: 180, start: 0.95, opacity: 0 }}
       >
-        <a href="/">Home <span>↗</span></a><a href="/rooms">Your room <span>↗</span></a><a
-          href="/room/new">Pay a room <span>↗</span></a
-        ><a href="/claim">Open a claim <span>↗</span></a><a href="/how-it-works"
-          >How it works <span>↗</span></a
-        ><a href="/privacy">Privacy, plainly <span>↗</span></a>
+        <a href="/" class:active={path === '/'}>Home <span>↗</span></a>
+        <a href="/room/new" class:active={path === '/room/new'}><strong>Pay a room</strong> <span class="badge-new">NEW</span></a>
+        <a href="/claim" class:active={path === '/claim'}>Open a claim <span>↗</span></a>
+        <a href="/rooms" class:active={path === '/rooms'}>Your room <span>↗</span></a>
+        <a href="/how-it-works" class:active={path === '/how-it-works'}>How it works <span>↗</span></a>
+        <a href="/privacy" class:active={path === '/privacy'}>Privacy, plainly <span>↗</span></a>
         <p>A little less admin.<br />A lot more privacy.</p>
         <span class="demo-tag">INTERACTIVE DEMO · NO REAL FUNDS</span>
       </nav>{/if}

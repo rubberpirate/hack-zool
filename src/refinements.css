@@ -6,25 +6,69 @@
 }
 .desktop-nav {
   display: flex;
-  gap: 2rem;
+  gap: 1.25rem;
   align-items: center;
   margin-left: auto;
-  margin-right: 2rem;
+  margin-right: 1.5rem;
   height: 2.8rem;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 .desktop-nav a {
-  padding: 0.5rem 0;
-  text-underline-offset: 0.35em;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
+}
+.desktop-nav a:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+.desktop-nav a:active {
+  transform: scale(0.98);
 }
 .desktop-nav a[aria-current='page'] {
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-decoration-thickness: 3px;
+  color: var(--ink);
+  background: var(--accent-soft);
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1.5px var(--accent-border);
 }
-.site-header:has(.steps) .desktop-nav,
-.recipient .desktop-nav {
+.desktop-nav a.nav-cta {
+  background: var(--ink);
+  color: white;
+  padding: 0.5rem 1.1rem;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+.desktop-nav a.nav-cta:hover {
+  background: #232420;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+.desktop-nav a.nav-cta[aria-current='page'] {
+  background: var(--ink);
+  color: white;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.badge-new {
+  font-size: 0.6rem;
+  font-weight: 800;
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+.site-header:has(.steps) .desktop-nav {
   display: none;
 }
 .workspace {
@@ -51,25 +95,25 @@
   padding: 0 0.07em 0.05em;
 }
 .marketing-page .landing {
-  min-height: min(44rem, calc(100svh - 7rem));
-  padding: 3.5rem 2rem 5rem;
+  min-height: min(48rem, calc(100svh - 7rem));
+  padding: 4.5rem 2.5rem 6rem;
   overflow: clip;
   text-align: center;
 }
 .marketing-page .landing h1 {
-  font-size: clamp(3.8rem, 7.7vw, 7.2rem);
+  font-size: clamp(4.4rem, 8.8vw, 8.2rem);
   letter-spacing: 0;
   line-height: 1.02;
 }
 .marketing-page .hero-intro {
-  font-size: 1.55rem;
-  margin-bottom: 1.2rem;
+  font-size: 1.8rem;
+  margin-bottom: 1.4rem;
 }
 .marketing-page .hero-copy {
-  font-size: 1.55rem;
-  line-height: 1.3;
-  margin: 1.9rem auto 1.5rem;
-  max-width: 45rem;
+  font-size: 1.75rem;
+  line-height: 1.35;
+  margin: 2.2rem auto 1.8rem;
+  max-width: 50rem;
 }
 .marketing-page .hero-cloud {
   width: 5.6rem;

@@ -1108,28 +1108,32 @@ input::placeholder {
   font-variant-numeric: tabular-nums;
 }
 .recipient {
-  max-width: 35rem;
+  width: 100%;
+  max-width: 86rem;
   margin: 0 auto;
   min-height: calc(100svh - 1.75rem);
 }
 .recipient .site-header {
-  height: 7.4375rem;
-  padding: 1.75rem 1.8125rem;
+  height: 6.75rem;
+  padding: 1.75rem 2.375rem;
 }
 .recipient .brand {
-  width: 3.8125rem;
-  height: 4.1875rem;
+  width: 3.625rem;
+  height: 4rem;
 }
 .recipient .menu-button {
-  min-height: 3.375rem;
-  min-width: 6.5rem;
+  min-height: 3.25rem;
+  min-width: 6.25rem;
   font-size: 0.8125rem;
 }
 .claim-page {
-  padding: 0 1.8125rem 1.4375rem;
+  padding: 0 2.5rem 2.5rem;
   display: flex;
   flex-direction: column;
   min-height: calc(100svh - 9.1875rem);
+  width: 100%;
+  max-width: 58rem;
+  margin: 0 auto;
 }
 .claim-page h1 {
   font-size: clamp(4.0625rem, 9vw, 5.625rem);
