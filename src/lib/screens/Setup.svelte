@@ -10,7 +10,7 @@
     mintClaims,
     copyText,
   } from '#lib/state.svelte.ts';
-  import { poolTotal, formatZatToZec } from '#lib/model.ts';
+  import { poolTotal, formatZatToZec, formatZecClean } from '#lib/model.ts';
   import { setupBackendFrost, signBackendFrost, devConfirmBackendDeposit } from '#lib/api.ts';
   import Action from '#lib/components/Action.svelte';
   import Art from '#lib/components/Art.svelte';
@@ -21,7 +21,7 @@
   let { fund = false }: { fund?: boolean } = $props();
   let name = $state('');
   let count = $state(3);
-  let amount = $state(0.5);
+  let amount = $state(0.0001);
   let expiry = $state(7);
   let split = $state<'tiers'>('tiers');
   let giftCards = $state(true);
@@ -36,17 +36,44 @@
   // Results & Distribution: 1st, 2nd, 3rd positions (email & prize money)
   let resultsMode = $state<'manual' | 'file'>('manual');
   let uploadedFileName = $state('');
-  let recipients = $state([
-    { rank: '1st Place', email: 'alice@zkproof.org', prize: 1.5, required: true },
-    { rank: '2nd Place', email: 'bob@cryptomail.io', prize: 1.0, required: false },
-    { rank: '3rd Place', email: 'charlie@privacy.net', prize: 0.5, required: false },
-  ]);
+  let recipients = $state(
+    app.recipients && app.recipients.length > 0
+      ? structuredClone(app.recipients)
+      : [
+          { rank: '1st Place', email: 'alice@zkproof.org', prize: 0.001, required: true },
+          { rank: '2nd Place', email: 'bob@cryptomail.io', prize: 0.0005, required: false },
+          { rank: '3rd Place', email: 'charlie@privacy.net', prize: 0.0003, required: false },
+        ]
+  );
+
+  function syncRecipientsCount(newCount: number) {
+    const target = Math.max(1, Math.min(100, Number(newCount) || 1));
+    if (recipients.length < target) {
+      const added = [];
+      for (let i = recipients.length + 1; i <= target; i++) {
+        added.push({
+          rank: i === 1 ? '1st Place' : i === 2 ? '2nd Place' : i === 3 ? '3rd Place' : `${i}th Place`,
+          email: '',
+          prize: 0.0001,
+          required: false,
+        });
+      }
+      recipients = [...recipients, ...added];
+    } else if (recipients.length > target) {
+      recipients = recipients.slice(0, target);
+    }
+  }
 
   function addRecipient() {
     const nextIdx = recipients.length + 1;
     recipients = [
       ...recipients,
-      { rank: `${nextIdx}th Place`, email: '', prize: Number(amount) || 0.5, required: false }
+      {
+        rank: nextIdx === 1 ? '1st Place' : nextIdx === 2 ? '2nd Place' : nextIdx === 3 ? '3rd Place' : `${nextIdx}th Place`,
+        email: '',
+        prize: 0.0001,
+        required: false,
+      }
     ];
     if (recipients.length > count) {
       count = recipients.length;
@@ -56,6 +83,7 @@
   function removeRecipient(idx: number) {
     if (idx === 0) return; // 1st place is mandatory
     recipients = recipients.filter((_, i) => i !== idx);
+    count = recipients.length;
   }
 
   function handleFileUpload(e: Event) {
@@ -66,25 +94,20 @@
       notify(`Parsed ${file.name}: 1st, 2nd, 3rd positions imported.`);
     }
   }
-  const total = $derived(
-    (() => {
-      const explicitSum = recipients.reduce((s, r) => s + (Number(r.prize) || 0), 0);
-      const remainingClaims = Math.max(0, (Number(count) || 1) - recipients.length);
-      const remainingSum = remainingClaims * (Number(amount) || 0);
-      return explicitSum + remainingSum;
-    })()
-  );
 
   const payoutTotalZat = $derived(
-    Math.round(total * 100_000_000)
+    recipients.reduce((s, r) => s + Math.max(0, Math.round((Number(r.prize) || 0) * 100_000_000)), 0) +
+    (Math.max(0, (Number(count) || 1) - recipients.length) * Math.max(0, Math.round((Number(amount) || 0) * 100_000_000)))
   );
+
   const feeReserveTotalZat = $derived(
     app.backendRoom?.fee_budget_per_ticket_zat
       ? app.backendRoom.fee_budget_per_ticket_zat * (Number(count) || 1)
       : 10_000 * (Number(count) || 1)
   );
+
   const requiredZat = $derived(
-    app.depositRequiredZat || (payoutTotalZat + feeReserveTotalZat)
+    fund && app.depositRequiredZat ? app.depositRequiredZat : (payoutTotalZat + feeReserveTotalZat)
   );
   const cleanDepositAmount = $derived(formatZatToZec(requiredZat));
   const cleanPayoutAmount = $derived(formatZatToZec(payoutTotalZat));
@@ -204,9 +227,11 @@
           error = '1st place winner email is mandatory and must be valid.';
           return;
         }
-        if (!first.prize || Number(first.prize) <= 0) {
-          error = '1st place prize money must be greater than 0 ZEC.';
-          return;
+        for (const r of recipients) {
+          if (!r.prize || Number(r.prize) < 0.0001) {
+            error = `${r.rank} prize must be at least 0.0001 ZEC (10,000 zatoshis).`;
+            return;
+          }
         }
       }
       if (
@@ -231,12 +256,12 @@
       busy = true;
       try {
         const amounts = recipients.map((r) =>
-          Math.max(10_000, Math.round((Number(r.prize) || 0.001) * 100_000_000))
+          Math.max(10_000, Math.round((Number(r.prize) || 0.0001) * 100_000_000))
         );
         while (amounts.length < count) {
-          amounts.push(Math.max(10_000, Math.round((Number(amount) || 0.001) * 100_000_000)));
+          amounts.push(Math.max(10_000, Math.round((Number(amount) || 0.0001) * 100_000_000)));
         }
-        await createRealRoom(values, amounts);
+        await createRealRoom(values, amounts, recipients);
         await goto('/room/fund');
       } catch (err: any) {
         error = err.message || 'Failed to create room on backend';
@@ -264,11 +289,14 @@
   $effect(() => {
     if (app.ready && !name && (fund || !app.room.funded)) {
       name = app.room.name;
-      count = app.room.count || 5;
+      count = app.room.count || 3;
       amount = app.room.amount;
       expiry = app.room.expiry;
       split = 'tiers';
       giftCards = app.room.giftCards;
+      if (app.recipients && app.recipients.length > 0) {
+        recipients = structuredClone(app.recipients);
+      }
     }
   });
 </script>
@@ -418,9 +446,7 @@
                 disabled={count <= 1}
                 onclick={() => {
                   count = Math.max(1, Number(count) - 1);
-                  if (recipients.length > count && count >= 1) {
-                    recipients = recipients.slice(0, count);
-                  }
+                  syncRecipientsCount(count);
                 }}>−</button
               ><input
                 id="claim-count"
@@ -428,6 +454,10 @@
                 min="1"
                 max="100"
                 bind:value={count}
+                oninput={(e) => {
+                  const val = Number((e.target as HTMLInputElement).value) || 1;
+                  syncRecipientsCount(val);
+                }}
                 aria-label="Number of claims"
               /><button
                 type="button"
@@ -435,9 +465,7 @@
                 disabled={count >= 100}
                 onclick={() => {
                   count = Math.min(100, Number(count) + 1);
-                  if (recipients.length < count) {
-                    addRecipient();
-                  }
+                  syncRecipientsCount(count);
                 }}>+</button
               >
             </div>
@@ -510,10 +538,10 @@
                     <div class="prize-input-wrapper">
                       <input
                         type="number"
-                        step="0.01"
-                        min="0.01"
+                        step="any"
+                        min="0.0001"
                         max="1000"
-                        placeholder="Prize"
+                        placeholder="0.001"
                         bind:value={recipient.prize}
                         required
                         aria-label={`${recipient.rank} Prize Amount in ZEC`}
@@ -579,20 +607,39 @@
             <dt>Positions</dt>
             <dd>{count || 0}</dd>
           </div>
-          <div>
-            <dt>1st Place</dt>
-            <dd>{(recipients[0]?.prize || 1.5).toFixed(2)} ZEC</dd>
-          </div>
+          {#each recipients as recipient}
+            <div>
+              <dt>{recipient.rank}</dt>
+              <dd>{formatZecClean(Number(recipient.prize) || 0)} ZEC</dd>
+            </div>
+          {/each}
+          {#if (Number(count) || 0) > recipients.length}
+            <div>
+              <dt>Other {Number(count) - recipients.length} claims</dt>
+              <dd>{formatZecClean(Number(amount) || 0)} ZEC each</dd>
+            </div>
+          {/if}
           <div>
             <dt>Expires</dt>
             <dd>{expiry} days</dd>
           </div>
         </dl>
         <div class="dotted-line"></div>
+        <div class="breakdown-rows hand" style="font-size: 0.85rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span class="muted">Payouts sum:</span>
+            <strong>{cleanPayoutAmount} TAZ</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span class="muted">Network fees ({count || 1} × 0.0001):</span>
+            <strong>{cleanFeeAmount} TAZ</strong>
+          </div>
+        </div>
+        <div class="dotted-line"></div>
         <p class="hand deposit-label">You deposit</p>
         <div class="deposit-total">{cleanDepositAmount} TAZ</div>
         <p class="muted hand fee-note">
-          {cleanPayoutAmount} TAZ payouts + {cleanFeeAmount} TAZ network fee reserve
+          Exact shielded deposit: {cleanPayoutAmount} TAZ payouts + {cleanFeeAmount} TAZ network fee reserve
         </p>
         <Action type="submit" disabled={busy || (fund && !app.room.funded)}
           >{busy ? 'Processing…' : fund ? (app.room.funded ? 'MINT CLAIM TICKETS →' : 'Awaiting ZEC Deposit…') : 'Generate Coordinator Address →'}</Action

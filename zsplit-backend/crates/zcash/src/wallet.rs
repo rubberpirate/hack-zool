@@ -525,7 +525,7 @@ impl PayoutEngine for NativeWallet {
             }
             let id = s.account(command.room_id)?;
             let balance = s.balance(command.room_id)?;
-            if balance.scanned_height != balance.chain_height {
+            if balance.chain_height.saturating_sub(balance.scanned_height) > 1000 {
                 return Err(DomainError::Unavailable);
             }
             if balance.spendable_zat < command.amount.value() {

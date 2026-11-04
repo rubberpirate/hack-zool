@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { claimAmount, daysLeft, type Room } from './model';
+import { claimAmount, daysLeft, formatZecClean, type Room } from './model';
 // A small vector PDF keeps exports crisp without shipping a PDF framework.
 export function downloadClaimsPDF(room: Room, origin: string) {
   const objects: string[] = [];
@@ -36,7 +36,7 @@ export function downloadClaimsPDF(room: Room, origin: string) {
             if (qr.get(r, c))
               stream += `${(x + 30 + c * unit).toFixed(3)} ${(y + 34 + (qr.size - r - 1) * unit).toFixed(3)} ${(unit + 0.01).toFixed(3)} ${(unit + 0.01).toFixed(3)} re f\n`;
       }
-      stream += text(`${claimAmount(room, i).toFixed(2)} ZEC / works once`, x + 12, y + 14, 9);
+      stream += text(`${formatZecClean(claimAmount(room, i))} ZEC / works once`, x + 12, y + 14, 9);
     }
     stream += text(
       'Keep each link private. Anyone holding an unused link can claim it.',

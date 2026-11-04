@@ -113,11 +113,12 @@ fn amount(v: u64) -> Result<i64, DomainError> {
     }
 }
 fn fresh(room: &Room) -> Result<(), DomainError> {
-    if room
-        .balance_updated_at
-        .is_none_or(|at| Utc::now().signed_duration_since(at).num_seconds() > 3600)
-        || room.chain_height.saturating_sub(room.scanned_height) > 100
-    {
+    if let Some(at) = room.balance_updated_at {
+        if Utc::now().signed_duration_since(at).num_seconds() > 6 * 3600 {
+            return Err(DomainError::Unavailable);
+        }
+    }
+    if room.chain_height.saturating_sub(room.scanned_height) > 1000 {
         return Err(DomainError::Unavailable);
     }
     Ok(())
@@ -634,16 +635,28 @@ impl Store {
         } else {
             validate_amounts(&room.payout_amounts, room.fee_reserve_zat as u64)?
         };
-        let ready = if room.claims_issued {
+        let max_confirmed = std::cmp::max(room.confirmed_zat, snapshot.confirmed_zat as i64);
+        let max_spendable = std::cmp::max(room.spendable_zat, snapshot.spendable_zat as i64);
+        let ready = if room.claims_issued || room.state == "ready" {
             true
         } else {
             snapshot
                 .chain_height
                 .saturating_sub(snapshot.scanned_height)
-                <= 100
-                && snapshot.spendable_zat >= required as u64
+                <= 1000
+                && max_spendable >= required as i64
         };
-        sqlx::query("UPDATE rooms SET confirmed_zat=$2,spendable_zat=$3,chain_height=$4,scanned_height=$5,balance_updated_at=now(),reserved_zat=$6,state=CASE WHEN state='closed' THEN state WHEN $7 THEN 'ready' ELSE 'paused' END WHERE id=$1").bind(room.id).bind(snapshot.confirmed_zat as i64).bind(snapshot.spendable_zat as i64).bind(i64::from(snapshot.chain_height)).bind(i64::from(snapshot.scanned_height)).bind(reserve).bind(ready).execute(&mut *tx).await.map_err(db)?;
+        sqlx::query("UPDATE rooms SET confirmed_zat=$2,spendable_zat=$3,chain_height=$4,scanned_height=$5,balance_updated_at=now(),reserved_zat=$6,state=CASE WHEN state='closed' THEN state WHEN $7 THEN 'ready' ELSE 'paused' END WHERE id=$1")
+            .bind(room.id)
+            .bind(max_confirmed)
+            .bind(max_spendable)
+            .bind(i64::from(snapshot.chain_height))
+            .bind(i64::from(snapshot.scanned_height))
+            .bind(reserve)
+            .bind(ready)
+            .execute(&mut *tx)
+            .await
+            .map_err(db)?;
         tx.commit().await.map_err(db)
     }
     pub async fn dev_fund_room(&self, room_id: Uuid, owner: Uuid) -> Result<(), DomainError> {

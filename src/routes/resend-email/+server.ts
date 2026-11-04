@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import QRCode from 'qrcode';
 import type { RequestHandler } from './$types';
 
 interface EmailPayload {
@@ -25,21 +26,36 @@ export const POST: RequestHandler = async ({ request }) => {
     for (const recipient of recipients) {
       if (!recipient.email || !recipient.claimUrl) continue;
 
+      let qrDataUrl = '';
+      try {
+        qrDataUrl = await QRCode.toDataURL(recipient.claimUrl, { margin: 1, width: 200 });
+      } catch (e) {
+        console.warn('QR code generation for email warning:', e);
+      }
+
+      const qrHtml = qrDataUrl
+        ? `<div style="text-align: center; margin: 18px 0 12px;">
+             <img src="${qrDataUrl}" alt="Your Unique Claim QR Code" style="width: 160px; height: 160px; border-radius: 8px; border: 1px solid #cbd5e0; padding: 4px; background: #fff;" />
+             <p style="margin: 6px 0 0; font-size: 11px; color: #718096; font-weight: bold;">Scan with camera or phone wallet to redeem</p>
+           </div>`
+        : '';
+
       const html = `
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 2px solid #111; border-radius: 12px; background: #ffffff; color: #111;">
   <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px dashed #e2e8f0; padding-bottom: 12px; margin-bottom: 18px;">
-    <span style="font-weight: 900; letter-spacing: 0.1em; font-size: 18px;">Z-SPLIT</span>
+    <span style="font-weight: 900; letter-spacing: 0.1em; font-size: 18px;">ZOOL</span>
     <span style="background: #e2e8f0; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: bold;">ZCASH TESTNET (NU7)</span>
   </div>
   <h2 style="margin: 0 0 12px; font-size: 22px;">You received a shielded payout!</h2>
   <p style="font-size: 15px; color: #4a5568; line-height: 1.5; margin-bottom: 20px;">
-    You were awarded funds from <strong>${roomName}</strong> on Z-Split.
+    You were awarded funds from <strong>${roomName}</strong> on Zool.
   </p>
   <div style="background: #f7fafc; padding: 18px; border-radius: 8px; margin: 16px 0; border: 1px solid #cbd5e0; text-align: center;">
     <p style="margin: 0; font-size: 12px; font-weight: 800; color: #718096; letter-spacing: 0.05em; text-transform: uppercase;">Your Allocated Prize</p>
     <p style="margin: 6px 0 0; font-size: 28px; font-weight: 900; color: #1a202c;">${recipient.prizeLabel}</p>
     <p style="margin: 4px 0 0; font-size: 22px; font-weight: 800; color: #2b6cb0;">${recipient.amountZec} TAZ</p>
   </div>
+  ${qrHtml}
   <p style="font-size: 14px; color: #4a5568; line-height: 1.5;">
     Tap below to open your unique one-time claim card and sweep the shielded funds directly to your Zingo or Zodl wallet address.
   </p>

@@ -31,6 +31,7 @@ export const app = $state({
   depositRequiredZat: 0,
   depositConfirmedZat: 0,
   issuedTickets: [] as IssuedClaimTicket[],
+  recipients: [] as { rank: string; email: string; prize: number; required?: boolean }[],
   summary: null as RoomSummaryResponse | null,
   frostSetup: null as {
     min_signers: number;
@@ -58,6 +59,9 @@ export function loadRoom() {
 
     const storedTickets = JSON.parse(localStorage.getItem('zool-issued-tickets') || localStorage.getItem('z-split-issued-tickets') || '[]');
     if (Array.isArray(storedTickets)) app.issuedTickets = storedTickets;
+
+    const storedRecipients = JSON.parse(localStorage.getItem('zool-recipients') || localStorage.getItem('z-split-recipients') || '[]');
+    if (Array.isArray(storedRecipients) && storedRecipients.length > 0) app.recipients = storedRecipients;
   } catch {
     /* Fresh state if local storage is unavailable. */
   }
@@ -80,6 +84,10 @@ export function saveRoom() {
       localStorage.setItem('zool-issued-tickets', JSON.stringify(app.issuedTickets));
       localStorage.setItem('z-split-issued-tickets', JSON.stringify(app.issuedTickets));
     }
+    if (app.recipients && app.recipients.length > 0) {
+      localStorage.setItem('zool-recipients', JSON.stringify(app.recipients));
+      localStorage.setItem('z-split-recipients', JSON.stringify(app.recipients));
+    }
   } catch {
     notify('This browser cannot save your room. Keep this tab open.');
   }
@@ -94,8 +102,12 @@ export function notify(message: string) {
 
 export async function createRealRoom(
   values: Pick<Room, 'name' | 'count' | 'amount' | 'expiry' | 'giftCards' | 'split'>,
-  customAmounts?: number[]
+  customAmounts?: number[],
+  customRecipients?: { rank: string; email: string; prize: number; required?: boolean }[]
 ) {
+  if (customRecipients) {
+    app.recipients = customRecipients;
+  }
   // Compute per-claim payout amounts respecting equal or tiered prizes (1st, 2nd, 3rd... price)
   const amounts = customAmounts && customAmounts.length === values.count
     ? customAmounts

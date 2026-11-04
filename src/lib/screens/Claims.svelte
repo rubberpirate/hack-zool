@@ -26,7 +26,7 @@
 
   $effect(() => {
     if (recipientList.length !== app.room.count) {
-      recipientList = Array.from({ length: app.room.count }, () => '');
+      recipientList = Array.from({ length: app.room.count }, (_, i) => app.recipients?.[i]?.email || '');
     }
   });
 
@@ -45,12 +45,14 @@
     const toSend = recipientList
       .map((email, idx) => {
         const number = idx + 1;
-        const amountZat = app.issuedTickets?.[idx]?.amount_zat ?? Math.round(claimAmount(app.room, number) * 100_000_000);
+        const customRec = app.recipients?.[idx];
+        const amountZat = app.issuedTickets?.[idx]?.amount_zat ??
+          (customRec?.prize ? Math.round(Number(customRec.prize) * 100_000_000) : Math.round(claimAmount(app.room, number) * 100_000_000));
         return {
           email: email.trim(),
           number,
           amountZec: formatZatToZec(amountZat),
-          prizeLabel: prizeRankLabel(number, app.room.split),
+          prizeLabel: customRec?.rank || prizeRankLabel(number, app.room.split),
           claimUrl: claimLink(number),
         };
       })
@@ -179,70 +181,20 @@
   </p>
   <h1>{app.room.count} CLAIM LINKS, READY.</h1>
   <div class="sheet-actions">
-    <button class="pill primary-pill" onclick={() => (showDispatch = true)}>
-      <Icon name="check" size={16} /> SEND TO RECIPIENTS
+    <button
+      class="pill primary-pill"
+      style="background: #111; color: #fff; font-weight: 900;"
+      onclick={() => (showEmailModal = true)}
+    >
+      📧 SEND TO RECIPIENTS (RESEND)
     </button>
     <button class="pill" onclick={printSheet}>PRINT SHEET</button><button
       class="pill"
       disabled={exporting}
       onclick={pdf}>{exporting ? 'PREPARING…' : 'DOWNLOAD PDF'}</button
     ><button class="pill" onclick={copyAll}>COPY ALL LINKS</button>
-    <button
-      class="pill"
-      style="background: #111; color: #fff;"
-      onclick={() => (showEmailModal = true)}
-    >
-      📧 EMAIL TO PARTICIPANTS (RESEND)
-    </button>
     <Action href="/room/live">Open live room</Action>
   </div>
-
-  {#if showDispatch}
-    <div class="dispatch-overlay" use:enter>
-      <div class="dispatch-modal">
-        <button class="dialog-x circle-button" onclick={() => (showDispatch = false)} aria-label="Close">
-          <Icon name="close" />
-        </button>
-        <span class="label">AUTOMATIC EMAIL DISTRIBUTION</span>
-        <h2>DISPATCH TO WINNERS</h2>
-        <p class="hand">Each winner receives an email with their unique secret claim URL and their native Z-Split QR code.</p>
-
-        <div class="dispatch-preview-list">
-          <div class="dispatch-item">
-            <div class="dispatch-item-header">
-              <span class="rank-tag gold">1st Place</span>
-              <strong class="dispatch-prize">{claimAmount(app.room, 1).toFixed(2)} ZEC</strong>
-            </div>
-            <span class="dispatch-email">alice@zkproof.org</span>
-            <code>{origin}/claim/{app.room.id}-1</code>
-          </div>
-          <div class="dispatch-item">
-            <div class="dispatch-item-header">
-              <span class="rank-tag">2nd Place</span>
-              <strong class="dispatch-prize">{claimAmount(app.room, 2).toFixed(2)} ZEC</strong>
-            </div>
-            <span class="dispatch-email">bob@cryptomail.io</span>
-            <code>{origin}/claim/{app.room.id}-2</code>
-          </div>
-          <div class="dispatch-item">
-            <div class="dispatch-item-header">
-              <span class="rank-tag">3rd Place</span>
-              <strong class="dispatch-prize">{claimAmount(app.room, 3).toFixed(2)} ZEC</strong>
-            </div>
-            <span class="dispatch-email">charlie@privacy.net</span>
-            <code>{origin}/claim/{app.room.id}-3</code>
-          </div>
-        </div>
-
-        <div class="dispatch-actions">
-          <button class="action primary has-cap" onclick={sendToWinners} disabled={dispatched}>
-            <span class="action-label">{dispatched ? 'Sent! Notifying winners…' : 'Send Emails with QR Codes'}</span>
-            <span class="action-cap"><Icon name="check" size={24} /></span>
-          </button>
-        </div>
-      </div>
-    </div>
-  {/if}
 
   {#key page}<div class="qr-grid" use:enter={'cards'}>
       {#each numbers as number}<a
@@ -262,7 +214,7 @@
             >
           </div>
           <div style="font-size: 0.72rem; font-weight: 700; color: #4a5568; margin-top: -0.4rem; margin-bottom: 0.4rem;">
-            {prizeRankLabel(number, app.room.split)}
+            {app.recipients?.[number - 1]?.rank || prizeRankLabel(number, app.room.split)}
           </div>
           {#if app.room.claimed.includes(number)}
             <div class="claimed-art">
@@ -277,7 +229,7 @@
             <span>
               {formatZatToZec(
                 app.issuedTickets?.[number - 1]?.amount_zat ??
-                Math.round(claimAmount(app.room, number) * 100_000_000)
+                (app.recipients?.[number - 1]?.prize ? Math.round(Number(app.recipients[number - 1].prize) * 100_000_000) : Math.round(claimAmount(app.room, number) * 100_000_000))
               )}<br />TAZ
             </span>
             <span class="muted"
@@ -353,10 +305,12 @@
 
         <div style="max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; background: #fbfbf9;">
           {#each Array.from({ length: app.room.count }, (_, i) => i + 1) as num}
-            {@const amt = formatZatToZec(app.issuedTickets?.[num - 1]?.amount_zat ?? Math.round(claimAmount(app.room, num) * 100_000_000))}
-            {@const rank = prizeRankLabel(num, app.room.split)}
+            {@const customRec = app.recipients?.[num - 1]}
+            {@const amountZat = app.issuedTickets?.[num - 1]?.amount_zat ?? (customRec?.prize ? Math.round(Number(customRec.prize) * 100_000_000) : Math.round(claimAmount(app.room, num) * 100_000_000))}
+            {@const amt = formatZatToZec(amountZat)}
+            {@const rank = customRec?.rank || prizeRankLabel(num, app.room.split)}
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.75rem; font-weight: bold; width: 160px; flex-shrink: 0;">
+              <span style="font-size: 0.75rem; font-weight: bold; width: 170px; flex-shrink: 0;">
                 No. {String(num).padStart(2, '0')} ({rank}):<br/>
                 <span style="color: #2b6cb0;">{amt} TAZ</span>
               </span>

@@ -47,7 +47,8 @@ export function poolTotal(room: Room) {
  * e.g., 300000 zats -> "0.003", 100000000 zats -> "1"
  */
 export function formatZatToZec(zats: number): string {
-  const zec = (zats / 100_000_000).toFixed(8);
+  const rounded = Math.round(Number(zats) || 0);
+  const zec = (rounded / 100_000_000).toFixed(8);
   return zec.replace(/\.?0+$/, '') || '0';
 }
 
@@ -55,7 +56,7 @@ export function formatZatToZec(zats: number): string {
  * Cleanly format float ZEC/TAZ to fixed decimal string without floating point jitter.
  */
 export function formatZecClean(amount: number): string {
-  const zats = Math.round(amount * 100_000_000);
+  const zats = Math.round((Number(amount) || 0) * 100_000_000);
   return formatZatToZec(zats);
 }
 

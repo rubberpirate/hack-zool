@@ -494,8 +494,8 @@ async fn ready(State(s): State<Arc<AppState>>) -> Result<Json<HealthResponse>, A
         r.state == "ready"
             && (r
                 .balance_updated_at
-                .is_none_or(|at| Utc::now().signed_duration_since(at).num_seconds() > 3600)
-                || r.chain_height.saturating_sub(r.scanned_height) > 100)
+                .is_some_and(|at| Utc::now().signed_duration_since(at).num_seconds() > 6 * 3600)
+                || r.chain_height.saturating_sub(r.scanned_height) > 1000)
     }) {
         return Err(DomainError::Unavailable.into());
     }
