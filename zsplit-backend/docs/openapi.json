@@ -1,0 +1,1193 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Z-Split API",
+    "description": "Reservation-first custodial Orchard payouts. Bearer tickets are returned once. Sweep reports are unverified. Recipient spending keys and personal sweep destinations must never reach this service.",
+    "license": {
+      "name": "MIT OR Apache-2.0",
+      "identifier": "MIT OR Apache-2.0"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/claims/{claim_id}": {
+      "get": {
+        "tags": [],
+        "operationId": "claim",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/claims/{claim_id}/redeem": {
+      "post": {
+        "tags": [],
+        "operationId": "redeem",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/claims/{claim_id}/status": {
+      "get": {
+        "tags": [],
+        "operationId": "claim_status",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/claims/{claim_id}/sweep-report": {
+      "post": {
+        "tags": [],
+        "operationId": "sweep_report",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SweepReportResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/meta": {
+      "get": {
+        "tags": [],
+        "operationId": "meta",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rooms": {
+      "post": {
+        "tags": [],
+        "operationId": "create_room",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoomRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms/{room_id}": {
+      "get": {
+        "tags": [],
+        "operationId": "get_room",
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms/{room_id}/claims": {
+      "post": {
+        "tags": [],
+        "operationId": "issue",
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms/{room_id}/deposit": {
+      "get": {
+        "tags": [],
+        "operationId": "deposit",
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms/{room_id}/events": {
+      "get": {
+        "tags": [],
+        "operationId": "events",
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner-authenticated SSE summary stream",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms/{room_id}/summary": {
+      "get": {
+        "tags": [],
+        "operationId": "summary",
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms/{room_id}/withdrawals": {
+      "post": {
+        "tags": [],
+        "operationId": "withdraw",
+        "parameters": [
+          {
+            "name": "room_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": [],
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "tags": [],
+        "operationId": "ready",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ClaimResponse": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "amount_zat",
+          "network",
+          "status",
+          "expires_at",
+          "confirmations",
+          "sweep_reported",
+          "sweep_verified"
+        ],
+        "properties": {
+          "amount_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "claim_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "confirmations": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "network": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sweep_reported": {
+            "type": "boolean"
+          },
+          "sweep_verified": {
+            "type": "boolean"
+          },
+          "txid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "CreateRoomRequest": {
+        "type": "object",
+        "required": [
+          "network",
+          "amounts_zat",
+          "expires_at"
+        ],
+        "properties": {
+          "amounts_zat": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "network": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DepositResponse": {
+        "type": "object",
+        "required": [
+          "room_id",
+          "network",
+          "address",
+          "birthday_height",
+          "confirmed_zat",
+          "spendable_zat",
+          "scanned_height",
+          "chain_height"
+        ],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "birthday_height": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "chain_height": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "confirmed_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "network": {
+            "type": "string"
+          },
+          "room_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scanned_height": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "spendable_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "ErrorBody": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "request_id"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "IssueResponse": {
+        "type": "object",
+        "required": [
+          "tickets"
+        ],
+        "properties": {
+          "tickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TicketResponse"
+            }
+          }
+        }
+      },
+      "MetaResponse": {
+        "type": "object",
+        "required": [
+          "network",
+          "confirmations",
+          "max_tickets",
+          "min_payout_zat",
+          "fee_budget_per_ticket_zat",
+          "sweep_reports_verified",
+          "recipient_wallet_requirement"
+        ],
+        "properties": {
+          "confirmations": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "fee_budget_per_ticket_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "max_tickets": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "min_payout_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "network": {
+            "type": "string"
+          },
+          "recipient_wallet_requirement": {
+            "type": "string"
+          },
+          "sweep_reports_verified": {
+            "type": "boolean"
+          }
+        }
+      },
+      "OperationResponse": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "payout_id",
+          "status",
+          "poll_after_ms"
+        ],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payout_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "poll_after_ms": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "RedeemRequest": {
+        "type": "object",
+        "required": [
+          "ephemeral_receiver",
+          "idempotency_key",
+          "client_network",
+          "wallet_persisted"
+        ],
+        "properties": {
+          "client_network": {
+            "type": "string"
+          },
+          "ephemeral_receiver": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "wallet_persisted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RoomResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "network",
+          "status",
+          "amounts_zat",
+          "fee_budget_per_ticket_zat",
+          "confirmed_zat",
+          "reserved_zat",
+          "claims_issued",
+          "expires_at"
+        ],
+        "properties": {
+          "amounts_zat": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          "claims_issued": {
+            "type": "boolean"
+          },
+          "confirmed_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fee_budget_per_ticket_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "network": {
+            "type": "string"
+          },
+          "reserved_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "SummaryResponse": {
+        "type": "object",
+        "required": [
+          "room_id",
+          "confirmed_zat",
+          "reserved_zat",
+          "spendable_zat",
+          "reserved_count",
+          "pending_count",
+          "funded_confirmed_count",
+          "expired_count",
+          "sweep_reported_count",
+          "manual_review_count",
+          "sweep_reports_verified"
+        ],
+        "properties": {
+          "confirmed_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "expired_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "funded_confirmed_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "manual_review_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "pending_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reserved_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reserved_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "room_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "spendable_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "sweep_reported_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "sweep_reports_verified": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SweepReportResponse": {
+        "type": "object",
+        "required": [
+          "reported",
+          "verified"
+        ],
+        "properties": {
+          "reported": {
+            "type": "boolean"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TicketResponse": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "amount_zat",
+          "token",
+          "claim_url",
+          "expires_at"
+        ],
+        "properties": {
+          "amount_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "claim_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "claim_url": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "WithdrawRequest": {
+        "type": "object",
+        "required": [
+          "organizer_receiver",
+          "amount_zat",
+          "idempotency_key",
+          "network"
+        ],
+        "properties": {
+          "amount_zat": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "idempotency_key": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "network": {
+            "type": "string"
+          },
+          "organizer_receiver": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "bearer_auth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
