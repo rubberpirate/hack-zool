@@ -8,21 +8,21 @@
   import { enter } from '#lib/motion.ts';
   let { fund = false }: { fund?: boolean } = $props();
   let name = $state('');
-  let count = $state(5);
+  let count = $state(3);
   let amount = $state(0.5);
   let expiry = $state(7);
-  let split = $state<'equal' | 'tiers'>('equal');
+  let split = $state<'tiers'>('tiers');
   let giftCards = $state(true);
   let busy = $state(false);
   let fundedSuccess = $state(false);
   let error = $state('');
 
-  // Results & Distribution feature: Only email and prize money
+  // Results & Distribution: 1st, 2nd, 3rd positions (email & prize money)
   let resultsMode = $state<'manual' | 'file'>('manual');
   let uploadedFileName = $state('');
   let recipients = $state([
     { rank: '1st Place', email: 'alice@zkproof.org', prize: 1.5, required: true },
-    { rank: '2nd Place', email: 'bob@cryptomail.io', prize: 0.5, required: false },
+    { rank: '2nd Place', email: 'bob@cryptomail.io', prize: 1.0, required: false },
     { rank: '3rd Place', email: 'charlie@privacy.net', prize: 0.5, required: false },
   ]);
 
@@ -42,28 +42,16 @@
     recipients = recipients.filter((_, i) => i !== idx);
   }
 
-  // When base amount changes in 'equal' mode, sync non-custom recipients if wanted
-  $effect(() => {
-    if (split === 'equal') {
-      recipients.forEach((r, idx) => {
-        // Keep 1st place custom or default to amount if unmodified
-        if (idx > 0 && !r.prize) {
-          r.prize = Number(amount) || 0.5;
-        }
-      });
-    }
-  });
-
   function handleFileUpload(e: Event) {
     const target = e.target as HTMLInputElement;
     const file = target.files?.[0];
     if (file) {
       uploadedFileName = file.name;
-      notify(`Parsed ${file.name}: emails and prize amounts imported.`);
+      notify(`Parsed ${file.name}: 1st, 2nd, 3rd positions imported.`);
     }
   }
 
-  // Computed total includes custom assigned amounts for defined recipients + base amount for remaining count
+  // Computed total directly sums the positions
   const total = $derived(
     (() => {
       const explicitSum = recipients.reduce((s, r) => s + (Number(r.prize) || 0), 0);
@@ -131,7 +119,7 @@
       count = app.room.count || 5;
       amount = app.room.amount;
       expiry = app.room.expiry;
-      split = app.room.split;
+      split = 'tiers';
       giftCards = app.room.giftCards;
     }
   });
@@ -181,13 +169,18 @@
         </div>
         <div class="field-row">
           <div class="field">
-            <label for="claim-count">HOW MANY CLAIM LINKS</label>
+            <label for="claim-count">WINNER POSITIONS</label>
             <div class="stepper">
               <button
                 type="button"
                 aria-label="One fewer claim"
                 disabled={count <= 1}
-                onclick={() => (count = Math.max(1, Number(count) - 1))}>−</button
+                onclick={() => {
+                  count = Math.max(1, Number(count) - 1);
+                  if (recipients.length > count && count >= 1) {
+                    recipients = recipients.slice(0, count);
+                  }
+                }}>−</button
               ><input
                 id="claim-count"
                 type="number"
@@ -200,76 +193,35 @@
                 type="button"
                 aria-label="One more claim"
                 disabled={count >= 100}
-                onclick={() => (count = Math.min(100, Number(count) + 1))}>+</button
+                onclick={() => {
+                  count = Math.min(100, Number(count) + 1);
+                  if (recipients.length < count) {
+                    addRecipient();
+                  }
+                }}>+</button
               >
             </div>
           </div>
-          <div class="field">
-            <label for="claim-amount">ZEC PER CLAIM</label>
-            <div class="amount-input">
-              <input
-                id="claim-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max="1000"
-                bind:value={amount}
-                required
-              /><span>ZEC</span>
-            </div>
-          </div>
-        </div>
-        <fieldset class="split-field">
-          <legend>SPLIT</legend>
-          <div class="split-buttons">
-            <button
-              type="button"
-              class="pill"
-              class:selected={split === 'equal'}
-              aria-pressed={split === 'equal'}
-              onclick={() => (split = 'equal')}>SAME FOR EVERYONE</button
-            ><button
-              type="button"
-              class="pill"
-              class:selected={split === 'tiers'}
-              aria-pressed={split === 'tiers'}
-              onclick={() => (split = 'tiers')}>TIERS: 1ST, 2ND,<br />3RD</button
+          <div class="field gift-field">
+            <label class="gift-toggle"
+              ><span class="hand">Let people cash out to a gift card</span><button
+                type="button"
+                role="switch"
+                aria-label="Allow gift card payouts"
+                aria-checked={giftCards}
+                class="switch"
+                class:on={giftCards}
+                onclick={() => (giftCards = !giftCards)}><span></span></button
+              ></label
             >
           </div>
-          {#if split === 'tiers'}<p class="field-note hand">
-              1st gets 3×. 2nd and 3rd get 2×. Everyone else gets the base amount.
-            </p>{/if}
-        </fieldset>
-        <div class="expiry-row">
-          <div class="field">
-            <label for="expiry">LINKS EXPIRE AFTER</label><select id="expiry" bind:value={expiry}
-              >{#each [1, 3, 7, 14, 30] as day}<option value={day}
-                  >{day} {day === 1 ? 'day' : 'days'}</option
-                >{/each}</select
-            >
-          </div>
-          <label class="gift-toggle"
-            ><span class="hand">Let people cash out to a gift card</span><button
-              type="button"
-              role="switch"
-              aria-label="Allow gift card payouts"
-              aria-checked={giftCards}
-              class="switch"
-              class:on={giftCards}
-              onclick={() => (giftCards = !giftCards)}><span></span></button
-            ></label
-          >
         </div>
         <div class="results-section">
           <div class="results-header">
             <div>
               <span class="label">RESULTS & DISTRIBUTION</span>
               <p class="hand results-kicker">
-                {#if split === 'equal'}
-                  Set custom prize for 1st place (mandatory) & optional custom places; everyone else receives the standard {Number(amount).toFixed(2)} ZEC base.
-                {:else}
-                  Set 1st place (mandatory) and tiered distribution recipients.
-                {/if}
+                1st, 2nd, and 3rd place positions with their respective prize rewards. Enter winner emails to dispatch claims.
               </p>
             </div>
             <div class="results-mode-pills">
@@ -302,7 +254,7 @@
                       <span class="req-tag">MANDATORY</span>
                     {/if}
                     <span class="muted hand rank-note">
-                      {idx === 0 ? 'Custom prize' : split === 'equal' ? 'Custom prize (or base amount)' : 'Tiered prize'}
+                      {idx === 0 ? '1st prize reward' : idx === 1 ? '2nd prize reward' : idx === 2 ? '3rd prize reward' : 'Position prize'}
                     </span>
                   </div>
                   <div class="recipient-inputs">
@@ -345,13 +297,8 @@
               <div class="recipients-footer-row">
                 <button type="button" class="add-recipient-btn" onclick={addRecipient}>
                   <Icon name="plus" size={16} />
-                  <span>+ Add custom recipient</span>
+                  <span>+ Add another position</span>
                 </button>
-                {#if count > recipients.length}
-                  <span class="hand remaining-recipients-note">
-                    + {count - recipients.length} remaining claim links will receive the standard {Number(amount).toFixed(2)} ZEC each.
-                  </span>
-                {/if}
               </div>
             </div>
           {:else}
@@ -390,12 +337,12 @@
         <h2 class="label">POOL TICKET</h2>
         <dl class="hand ticket-details">
           <div>
-            <dt>Claim links</dt>
+            <dt>Positions</dt>
             <dd>{count || 0}</dd>
           </div>
           <div>
-            <dt>{split === 'equal' ? 'Per claim' : 'Base claim'}</dt>
-            <dd>{(Number(amount) || 0).toFixed(2)} ZEC</dd>
+            <dt>1st Place</dt>
+            <dd>{(recipients[0]?.prize || 1.5).toFixed(2)} ZEC</dd>
           </div>
           <div>
             <dt>Expires</dt>
