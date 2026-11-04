@@ -44,6 +44,7 @@ pub async fn run(
                 // Stop payouts when sync fails: stale balance must never authorize new spends.
                 match engine.sync().await {
                     Ok(balances) => {
+                        reconcile(&store, engine.as_ref(), config.confirmations).await?;
                         for balance in balances { store.update_balance(balance).await?; }
                     }
                     Err(_) => {
@@ -52,7 +53,6 @@ pub async fn run(
                     }
                 }
                 store.recover_stale_jobs().await?;
-                reconcile(&store, engine.as_ref(), config.confirmations).await?;
                 if let Some(job) = store.lease_job(worker).await? {
                     dispatch(&store, engine.as_ref(), cipher.as_ref(), worker, job).await?;
                 }
@@ -93,7 +93,7 @@ pub async fn dispatch(
                 let command = FundingCommand {
                     payout_id: job.id,
                     room_id: job.room_id,
-                    network: job.network,
+                    network: job.network.parse()?,
                     amount: Zats::new(
                         u64::try_from(job.amount_zat).map_err(|_| DomainError::InvalidInput)?,
                     )?,

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/domain", "crates/claims", "crates/store", "crates/zcash", "apps/api", "apps/worker"]
+members = ["crates/domain", "crates/claims", "crates/store", "crates/zcash", "apps/api", "apps/worker", "tests"]
 resolver = "2"
 
 [workspace.package]
@@ -17,8 +17,8 @@ zsplit-zcash = { path = "crates/zcash" }
 async-trait = "0.1"
 axum = { version = "0.8", features = ["macros"] }
 tokio = { version = "1", features = ["full"] }
-utoipa = { version = "5", features = ["uuid", "chrono"] }
-utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }
+utoipa = { version = "=6.0.0", features = ["uuid", "chrono"] }
+utoipa-swagger-ui = { version = "=10.0.2", features = ["axum", "vendored"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-tokio", "tls-rustls-ring", "postgres", "uuid", "chrono", "migrate", "macros"] }
@@ -50,8 +50,9 @@ zcash_protocol = "=0.11.0"
 zcash_primitives = "=0.31.0"
 zcash_proofs = "=0.31.0"
 orchard = "=0.16.0"
-zip32 = "0.2"
+zip32 = "=0.3.0"
 zip321 = "=0.10.0"
 tonic = { version = "0.14", features = ["transport", "tls-webpki-roots"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
 rand10 = { package = "rand", version = "0.10" }
+rand_chacha = "0.10"
