@@ -21,7 +21,9 @@
   font-display: swap;
 }
 @theme {
-  --color-lime: #d7fa3c;
+  --color-accent: #C3B8EE;
+  --color-accent-hover: #B4A7E5;
+  --color-lime: var(--color-accent);
   --color-mint: #68bf95;
   --color-ink: #050604;
   --font-display: Anton, sans-serif;
@@ -29,13 +31,21 @@
   --font-sans: 'DM Sans', sans-serif;
 }
 :root {
-  --lime: #d7fa3c;
+  --accent: #C3B8EE;
+  --accent-hover: #B4A7E5;
+  --accent-soft: rgba(195, 184, 238, 0.18);
+  --accent-border: rgba(195, 184, 238, 0.4);
+  --on-accent: #050604;
+  --lime: var(--accent);
   --mint: #68bf95;
   --yellow: #f2e97b;
   --ink: #050604;
   --muted: #5e6059;
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
   font-family: 'DM Sans', sans-serif;
   color: var(--ink);
   background: #232420;
@@ -44,6 +54,8 @@
   -webkit-font-smoothing: antialiased;
   scrollbar-color: var(--ink) #eeeeea;
   caret-color: var(--ink);
+  scroll-behavior: smooth;
+  scroll-padding-top: 2rem;
 }
 * {
   box-sizing: border-box;
@@ -85,16 +97,16 @@ button {
   background: none;
 }
 ::selection {
-  background: var(--lime);
-  color: black;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 :focus-visible {
-  outline: 0.1875rem solid #43876a;
-  outline-offset: 0.3125rem;
+  outline: 0.1875rem solid var(--accent);
+  outline-offset: 0.25rem;
 }
 input:focus-visible,
 select:focus-visible {
-  outline-offset: 0.1875rem;
+  outline-offset: 0.125rem;
 }
 h1,
 h2,
@@ -218,8 +230,10 @@ fieldset {
   align-items: center;
   gap: 0.5rem;
   transition:
-    background-color 160ms ease,
-    transform 160ms var(--ease-out);
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) ease;
 }
 .menu-button {
   min-width: 6rem;
@@ -319,18 +333,22 @@ fieldset {
   position: relative;
   gap: 1rem;
   transition:
-    transform 160ms var(--ease-out),
-    background-color 160ms ease;
+    transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
   vertical-align: middle;
   white-space: nowrap;
 }
 .action.primary {
-  background: var(--lime);
-  border: 0.125rem solid var(--lime);
+  background: var(--accent);
+  border: 0.125rem solid var(--accent);
+  color: var(--on-accent);
 }
 .action.secondary {
   background: white;
   border: 0.125rem solid black;
+  color: var(--ink);
 }
 .action-label {
   padding: 0 1.4375rem;
@@ -350,12 +368,12 @@ fieldset {
   color: white;
   margin: -0.0625rem;
   flex-shrink: 0;
-  transition: transform 220ms var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out);
 }
 .action:active,
 .pill:active,
 .circle-button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 .art {
   display: block;
@@ -366,14 +384,14 @@ fieldset {
 .landing {
   min-height: calc(100svh - 8.5rem);
   text-align: center;
-  padding: 1.0625rem 1.875rem 17.1875rem;
+  padding: 2rem 1.875rem 4.5rem;
   position: relative;
   isolation: isolate;
 }
 .hero-intro {
   font-size: 1.625rem;
   line-height: 1.25;
-  transform: rotate(-2deg);
+  transform: none;
   margin: 0 0 0.9375rem;
 }
 .hero-heading-wrap {
@@ -395,7 +413,7 @@ fieldset {
   border-radius: 1rem;
   position: relative;
   margin: 0 0.4375rem -0.9375rem;
-  transform: rotate(0.4deg);
+  transform: none;
 }
 .hero-copy {
   font-size: 1.5625rem;
@@ -860,13 +878,29 @@ input::placeholder {
   width: 100%;
   height: 100%;
   display: block;
+  animation: qr-fade-in var(--dur-base) var(--ease-out);
+}
+@keyframes qr-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .qr-placeholder {
   width: 85%;
   height: 85%;
-  background: #f0f1eb;
+  background: linear-gradient(
+    90deg,
+    #f0f1eb 0%,
+    #fafaf7 50%,
+    #f0f1eb 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
   display: block;
-  border-radius: 0.1875rem;
+  border-radius: 0.25rem;
 }
 .qr-fallback {
   font-family: 'Patrick Hand';
@@ -1379,6 +1413,17 @@ input::placeholder {
   font-size: 1.3125rem;
   line-height: 1.3;
   margin-top: 0.9375rem;
+  animation: error-appear var(--dur-base) var(--ease-out);
+}
+@keyframes error-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .gift-code {
   border: 0.125rem dashed black;
@@ -1601,13 +1646,15 @@ dialog .text-link {
 }
 @media (hover: hover) and (pointer: fine) {
   .action.primary:hover {
-    background: #e1ff67;
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
   }
   .action.secondary:hover,
   .pill:hover,
   .circle-button:hover,
   .stepper button:hover {
     background: #f3f4ed;
+    border-color: #050604;
   }
   .action:hover .action-cap {
     transform: rotate(90deg);
@@ -1619,14 +1666,14 @@ dialog .text-link {
     transform: rotate(-6deg);
   }
   .qr-card:not(.claimed):not(.closed):hover {
-    transform: translateY(-0.3125rem) rotate(-0.7deg);
-    background: #fbffe8;
+    transform: translateY(-0.1875rem) rotate(-0.5deg);
+    background: var(--accent-soft);
   }
   .claim-dot:hover {
-    transform: scale(1.08);
+    transform: scale(1.06);
   }
   .menu-panel a:hover {
-    background: var(--lime);
+    background: var(--accent-soft);
     border-radius: 0.3125rem;
   }
   .text-link:hover {
@@ -3407,5 +3454,47 @@ dialog .text-link {
   }
   .landing .hero-copy {
     margin-top: 3.5rem;
+  }
+}
+
+/* Skeleton shimmer utility */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(238, 238, 234, 0.6) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(238, 238, 234, 0.6) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* Accessibility: prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .brand:hover,
+  .action:hover .action-cap,
+  .action:has(.action-cap):hover,
+  .qr-card:not(.claimed):not(.closed):hover,
+  .claim-dot:hover,
+  .action:active,
+  .pill:active,
+  .circle-button:active {
+    transform: none !important;
   }
 }

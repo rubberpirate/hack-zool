@@ -20,7 +20,7 @@
 }
 .desktop-nav a[aria-current='page'] {
   text-decoration: underline;
-  text-decoration-color: var(--lime);
+  text-decoration-color: var(--accent);
   text-decoration-thickness: 3px;
 }
 .site-header:has(.steps) .desktop-nav,
@@ -29,6 +29,9 @@
 }
 .workspace {
   max-width: 86rem;
+}
+.marketing-page {
+  position: relative;
 }
 .marketing-page h2,
 .closing-cta h2 {
@@ -48,8 +51,8 @@
   padding: 0 0.07em 0.05em;
 }
 .marketing-page .landing {
-  min-height: min(52rem, calc(100svh - 7rem));
-  padding: 2.5rem 2rem 17rem;
+  min-height: min(44rem, calc(100svh - 7rem));
+  padding: 3.5rem 2rem 5rem;
   overflow: clip;
   text-align: center;
 }
@@ -146,7 +149,7 @@
 }
 .scene-toy:focus-visible {
   z-index: 31;
-  outline: 3px dashed #43876a;
+  outline: 3px dashed var(--accent);
 }
 .scene-piece {
   display: block;
@@ -300,7 +303,7 @@
   background: var(--yellow);
 }
 .story-step:nth-child(3) .step-visual {
-  background: var(--lime);
+  background: var(--accent);
 }
 .story-ticket-label {
   font-size: 0.75rem;
@@ -352,7 +355,7 @@
   height: 6rem;
 }
 .wallet-feature {
-  background: var(--lime);
+  background: var(--accent);
 }
 .gift-feature {
   background: var(--yellow);
@@ -498,9 +501,10 @@
   border-radius: 50%;
   font-size: 1.2rem;
   flex-shrink: 0;
+  transition: transform var(--dur-base) var(--ease-out), background-color var(--dur-fast) ease;
 }
 .faq-list details[open] summary > span {
-  background: var(--lime);
+  background: var(--accent);
   transform: rotate(45deg);
 }
 .faq-list details > p {
@@ -514,7 +518,7 @@
   position: relative;
   padding: 5.5rem 2rem 6rem;
   text-align: center;
-  background: var(--lime);
+  background: var(--accent);
   border-top: 2px solid black;
   border-bottom: 2px solid black;
   overflow: hidden;

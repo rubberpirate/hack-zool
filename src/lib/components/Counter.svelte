@@ -15,7 +15,7 @@
     const animation = animate(
       untrack(() => display),
       end,
-      { duration: 0.65, ease: [0.23, 1, 0.32, 1], onUpdate: (n) => (display = Math.round(n)) }
+      { duration: 0.4, ease: [0.22, 1, 0.36, 1], onUpdate: (n) => (display = Math.round(n)) }
     );
     return () => animation.stop();
   });

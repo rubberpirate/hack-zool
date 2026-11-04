@@ -143,7 +143,7 @@
               cx="80"
               cy="80"
               r="74"
-              fill="var(--lime)"
+              fill="var(--accent)"
               stroke="black"
               stroke-width="3"
             /><path id="one-time-ring" d="M80 21a59 59 0 1 1-.1 0" fill="none" /><text

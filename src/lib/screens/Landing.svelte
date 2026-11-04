@@ -1,7 +1,7 @@
 <script lang="ts">
   import Action from '#lib/components/Action.svelte';
   import Art from '#lib/components/Art.svelte';
-  import Scenery from '#lib/components/Scenery.svelte';
+  import FallingCoins from '#lib/components/FallingCoins.svelte';
   import Footer from '#lib/components/Footer.svelte';
   import FAQ from '#lib/components/FAQ.svelte';
   import Icon from '#lib/components/Icon.svelte';
@@ -35,12 +35,11 @@
 </script>
 
 <main id="main" class="marketing-page">
+  <FallingCoins />
   <section class="landing" aria-label="Pay the room" use:enter>
     <div class="hero-intro hand">shielded ZEC payouts, hand-delivered</div>
     <div class="hero-heading-wrap">
-      <div class="hero-cloud"><Art kind="cloud" /></div>
       <h1>PAY 50 PEOPLE.<br />COLLECT <span class="zero">0</span> ADDRESSES.</h1>
-      <div class="hero-badge"><Art kind="badge" /></div>
     </div>
     <p class="hero-copy hand">
       One pool of ZEC. A handful of one-time claim links.<br class="desktop-break" /> Everyone gets their
@@ -62,8 +61,6 @@
         size={19}
       /></a
     >
-    <p class="toy-hint hand">psst… the doodles like to play. drag one.</p>
-    <Scenery />
   </section>
   <section id="how-it-works" class="product-story">
     <div class="story-opening" use:reveal>

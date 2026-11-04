@@ -61,7 +61,7 @@
       width="129"
       height="99"
       rx="15"
-      fill="var(--lime)"
+      fill="var(--accent)"
       stroke="currentColor"
       stroke-width="4"
     /><path d="M16 83h129" stroke="currentColor" stroke-width="4" />
@@ -78,7 +78,7 @@
       stroke-linecap="round"
     />
   {:else if kind === 'badge'}
-    <circle cx="80" cy="80" r="74" fill="var(--lime)" stroke="currentColor" stroke-width="3" />
+    <circle cx="80" cy="80" r="74" fill="var(--accent)" stroke="currentColor" stroke-width="3" />
     <path id="badge-ring" d="M80 20a60 60 0 1 1-.1 0" />
     <text
       fill="currentColor"

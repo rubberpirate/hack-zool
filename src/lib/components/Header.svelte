@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { scale, fade } from 'svelte/transition';
   import { app } from '#lib/state.svelte.ts';
   import Icon from './Icon.svelte';
   let open = $state(false);
@@ -21,7 +22,7 @@
     }
   }}
 />
-<header class="site-header">
+<header id="top" class="site-header">
   <div class="brand-group">
     <a class="brand" href="/" aria-label="Z-Split home"
       ><svg viewBox="0 0 60 65" aria-hidden="true"
@@ -81,7 +82,12 @@
       onclick={() => (open = !open)}
       >{open ? 'CLOSE' : 'MENU'}{#if open}<Icon name="close" size={15} />{/if}</button
     >
-    {#if open}<nav id="main-menu" class="menu-panel" aria-label="Main navigation">
+    {#if open}<nav
+        id="main-menu"
+        class="menu-panel"
+        aria-label="Main navigation"
+        transition:scale={{ duration: 180, start: 0.95, opacity: 0 }}
+      >
         <a href="/">Home <span>↗</span></a><a href="/rooms">Your room <span>↗</span></a><a
           href="/room/new">Pay a room <span>↗</span></a
         ><a href="/claim">Open a claim <span>↗</span></a><a href="/how-it-works"
@@ -96,5 +102,6 @@
     tabindex="-1"
     class="menu-dismiss"
     aria-label="Close menu"
+    transition:fade={{ duration: 150 }}
     onclick={() => (open = false)}
   ></button>{/if}

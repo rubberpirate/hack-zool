@@ -3,10 +3,23 @@
   import '../refinements.css';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
+  import { onNavigate } from '$app/navigation';
   import { app, loadRoom } from '#lib/state.svelte.ts';
   import Header from '#lib/components/Header.svelte';
   import Icon from '#lib/components/Icon.svelte';
+  import BackToTop from '#lib/components/BackToTop.svelte';
   let { children } = $props();
+
+  onNavigate((navigation) => {
+    if (!document.startViewTransition) return;
+    return new Promise((resolve) => {
+      document.startViewTransition(async () => {
+        resolve();
+        await navigation.complete;
+      });
+    });
+  });
+
   onMount(() => {
     loadRoom();
     const handler = (e: StorageEvent) => {
@@ -44,3 +57,4 @@
     aria-label="Dismiss notification"><Icon name="close" size={18} /></button
   >
 </div>
+<BackToTop />
