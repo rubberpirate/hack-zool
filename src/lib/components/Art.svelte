@@ -3,7 +3,7 @@
     kind = 'envelope',
     class: className = '',
   }: {
-    kind?: 'envelope' | 'coin' | 'gift' | 'shield' | 'success' | 'cloud' | 'badge';
+    kind?: 'envelope' | 'coin' | 'coin-check' | 'gift' | 'shield' | 'success' | 'cloud' | 'badge';
     class?: string;
   } = $props();
 </script>
@@ -34,6 +34,44 @@
       d="m57 56 45-5-46 57 47-5"
       stroke="currentColor"
       stroke-width="5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  {:else if kind === 'coin-check'}
+    <circle
+      cx="76"
+      cy="82"
+      r="62"
+      fill="var(--yellow)"
+      stroke="currentColor"
+      stroke-width="5"
+    /><circle
+      cx="76"
+      cy="82"
+      r="48"
+      stroke="currentColor"
+      stroke-width="3"
+      stroke-dasharray="7 5"
+    /><path
+      d="m54 62 38-4-40 48 40-4"
+      stroke="currentColor"
+      stroke-width="4.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <!-- Verified tick badge on coin -->
+    <circle
+      cx="116"
+      cy="44"
+      r="32"
+      fill="var(--mint)"
+      stroke="black"
+      stroke-width="4"
+    />
+    <path
+      d="m105 45 7 7 16-16"
+      stroke="black"
+      stroke-width="4.5"
       stroke-linecap="round"
       stroke-linejoin="round"
     />

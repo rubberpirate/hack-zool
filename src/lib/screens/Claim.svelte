@@ -265,8 +265,10 @@
     </div>
   {:else}
     <section class="done-content" use:enter>
-      <div class="success-art" use:enter={'art'}><Art kind="success" /></div>
-      <p class="hand claim-kicker">link burned. money moving.</p>
+      <div class="success-art coin-check-art" use:enter={'art'}>
+        <Art kind="coin-check" />
+      </div>
+      <p class="hand claim-kicker">link burned. z-coin swept with verified tick.</p>
       <h1><mark>ALL</mark><br />YOURS.</h1>
       <p class="hand done-description">
         {amount.toFixed(2)} ZEC is on its way to {gift

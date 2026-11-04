@@ -46,8 +46,8 @@
       share. Nobody fills in a spreadsheet.
     </p>
     <div class="hero-actions">
-      <Action href="/room/new">I'm paying a room</Action><Action href="/claim" secondary cap={false}
-        >I have a claim link</Action
+      <Action href="/room/new">Fund a Z-Pool</Action><Action href="/claim" secondary cap={false}
+        >Claim prize</Action
       >
     </div>
     <div class="hero-smallprint">

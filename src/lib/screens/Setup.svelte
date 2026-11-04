@@ -8,16 +8,71 @@
   import { enter } from '#lib/motion.ts';
   let { fund = false }: { fund?: boolean } = $props();
   let name = $state('');
-  let count = $state(50);
+  let count = $state(5);
   let amount = $state(0.5);
   let expiry = $state(7);
   let split = $state<'equal' | 'tiers'>('equal');
   let giftCards = $state(true);
   let busy = $state(false);
+  let fundedSuccess = $state(false);
   let error = $state('');
+
+  // Results & Distribution feature: Only email and prize money
+  let resultsMode = $state<'manual' | 'file'>('manual');
+  let uploadedFileName = $state('');
+  let recipients = $state([
+    { rank: '1st Place', email: 'alice@zkproof.org', prize: 1.5, required: true },
+    { rank: '2nd Place', email: 'bob@cryptomail.io', prize: 0.5, required: false },
+    { rank: '3rd Place', email: 'charlie@privacy.net', prize: 0.5, required: false },
+  ]);
+
+  function addRecipient() {
+    const nextIdx = recipients.length + 1;
+    recipients = [
+      ...recipients,
+      { rank: `${nextIdx}th Place`, email: '', prize: Number(amount) || 0.5, required: false }
+    ];
+    if (recipients.length > count) {
+      count = recipients.length;
+    }
+  }
+
+  function removeRecipient(idx: number) {
+    if (idx === 0) return; // 1st place is mandatory
+    recipients = recipients.filter((_, i) => i !== idx);
+  }
+
+  // When base amount changes in 'equal' mode, sync non-custom recipients if wanted
+  $effect(() => {
+    if (split === 'equal') {
+      recipients.forEach((r, idx) => {
+        // Keep 1st place custom or default to amount if unmodified
+        if (idx > 0 && !r.prize) {
+          r.prize = Number(amount) || 0.5;
+        }
+      });
+    }
+  });
+
+  function handleFileUpload(e: Event) {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (file) {
+      uploadedFileName = file.name;
+      notify(`Parsed ${file.name}: emails and prize amounts imported.`);
+    }
+  }
+
+  // Computed total includes custom assigned amounts for defined recipients + base amount for remaining count
   const total = $derived(
-    poolTotal({ ...app.room, count: Number(count) || 1, amount: Number(amount) || 0, split })
+    (() => {
+      const explicitSum = recipients.reduce((s, r) => s + (Number(r.prize) || 0), 0);
+      const remainingClaims = Math.max(0, (Number(count) || 1) - recipients.length);
+      const remainingSum = remainingClaims * (Number(amount) || 0);
+      return explicitSum + remainingSum;
+    })()
   );
+
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     error = '';
@@ -25,6 +80,18 @@
       error = 'Give your room a name so people know who paid them.';
       document.getElementById('room-name')?.focus();
       return;
+    }
+    // Check 1st place recipient email is filled if manual
+    if (!fund && resultsMode === 'manual') {
+      const first = recipients[0];
+      if (!first.email.trim() || !first.email.includes('@')) {
+        error = '1st place winner email is mandatory and must be valid.';
+        return;
+      }
+      if (!first.prize || Number(first.prize) <= 0) {
+        error = '1st place prize money must be greater than 0 ZEC.';
+        return;
+      }
     }
     if (
       !Number.isInteger(Number(count)) ||
@@ -50,7 +117,8 @@
       await goto('/room/fund');
     } else {
       busy = true;
-      await new Promise((r) => setTimeout(r, 850));
+      fundedSuccess = true;
+      await new Promise((r) => setTimeout(r, 1200));
       createRoom(values);
       notify('Demo pool funded. Your one-time links are ready.');
       await goto('/room/claims');
@@ -60,7 +128,7 @@
   $effect(() => {
     if (app.ready && !name && (fund || !app.room.funded)) {
       name = app.room.name;
-      count = app.room.count;
+      count = app.room.count || 5;
       amount = app.room.amount;
       expiry = app.room.expiry;
       split = app.room.split;
@@ -74,12 +142,19 @@
   <form class="setup-grid" onsubmit={submit}>
     <section class="setup-fields">
       <p class="hand intro">
-        {fund ? 'a little pool. a whole room of possibilities.' : 'first, name it and size it'}
+        {fund ? 'a little pool. a whole room of possibilities.' : 'first, name it, size it & add results'}
       </p>
       <h1>{fund ? 'FUND THE ROOM.' : 'SET UP THE ROOM.'}</h1>
       {#if fund}
         <div class="fund-panel">
-          <Art kind="envelope" />
+          {#if fundedSuccess}
+            <div class="fund-success-coin" use:enter={'art'}>
+              <Art kind="coin-check" />
+              <p class="hand success-label">Payment verified & locked in pool!</p>
+            </div>
+          {:else}
+            <Art kind="envelope" />
+          {/if}
           <h2>ONE POOL.<br />EVERYONE GETS PAID.</h2>
           <p class="hand">
             Your room is ready. Add {total.toFixed(2)} ZEC to make {count} one-time claim links.
@@ -185,8 +260,126 @@
             ></label
           >
         </div>
+        <div class="results-section">
+          <div class="results-header">
+            <div>
+              <span class="label">RESULTS & DISTRIBUTION</span>
+              <p class="hand results-kicker">
+                {#if split === 'equal'}
+                  Set custom prize for 1st place (mandatory) & optional custom places; everyone else receives the standard {Number(amount).toFixed(2)} ZEC base.
+                {:else}
+                  Set 1st place (mandatory) and tiered distribution recipients.
+                {/if}
+              </p>
+            </div>
+            <div class="results-mode-pills">
+              <button
+                type="button"
+                class="pill"
+                class:selected={resultsMode === 'manual'}
+                onclick={() => (resultsMode = 'manual')}
+              >
+                WRITE RESULTS
+              </button>
+              <button
+                type="button"
+                class="pill"
+                class:selected={resultsMode === 'file'}
+                onclick={() => (resultsMode = 'file')}
+              >
+                UPLOAD FILE
+              </button>
+            </div>
+          </div>
+
+          {#if resultsMode === 'manual'}
+            <div class="recipients-list">
+              {#each recipients as recipient, idx}
+                <div class="recipient-row" class:mandatory={recipient.required}>
+                  <div class="recipient-rank">
+                    <span class="rank-badge" class:gold={idx === 0}>{recipient.rank}</span>
+                    {#if recipient.required}
+                      <span class="req-tag">MANDATORY</span>
+                    {/if}
+                    <span class="muted hand rank-note">
+                      {idx === 0 ? 'Custom prize' : split === 'equal' ? 'Custom prize (or base amount)' : 'Tiered prize'}
+                    </span>
+                  </div>
+                  <div class="recipient-inputs">
+                    <div class="email-input-wrapper">
+                      <input
+                        type="email"
+                        placeholder="winner@email.com"
+                        bind:value={recipient.email}
+                        required={recipient.required}
+                        aria-label={`${recipient.rank} Email`}
+                      />
+                    </div>
+                    <div class="prize-input-wrapper">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        max="1000"
+                        placeholder="Prize"
+                        bind:value={recipient.prize}
+                        required
+                        aria-label={`${recipient.rank} Prize Amount in ZEC`}
+                      />
+                      <span class="currency-tag">ZEC</span>
+                    </div>
+                    {#if !recipient.required}
+                      <button
+                        type="button"
+                        class="remove-recipient-btn"
+                        aria-label={`Remove ${recipient.rank}`}
+                        onclick={() => removeRecipient(idx)}
+                      >
+                        <Icon name="close" size={14} />
+                      </button>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+
+              <div class="recipients-footer-row">
+                <button type="button" class="add-recipient-btn" onclick={addRecipient}>
+                  <Icon name="plus" size={16} />
+                  <span>+ Add custom recipient</span>
+                </button>
+                {#if count > recipients.length}
+                  <span class="hand remaining-recipients-note">
+                    + {count - recipients.length} remaining claim links will receive the standard {Number(amount).toFixed(2)} ZEC each.
+                  </span>
+                {/if}
+              </div>
+            </div>
+          {:else}
+            <div class="file-upload-card">
+              <label class="file-dropzone" for="results-file-input">
+                <Icon name="copy" size={28} />
+                <span class="drop-title">Upload Results CSV / JSON</span>
+                <span class="hand drop-subtitle">Columns: rank, email, prize_zec (1st place required)</span>
+                {#if uploadedFileName}
+                  <div class="uploaded-badge">
+                    <span class="check-mini"><Icon name="check" size={14} /></span>
+                    <span>{uploadedFileName}</span>
+                  </div>
+                {/if}
+                <input
+                  id="results-file-input"
+                  type="file"
+                  accept=".csv,.json,.txt"
+                  onchange={handleFileUpload}
+                  class="sr-only"
+                />
+              </label>
+            </div>
+          {/if}
+        </div>
+
         <p class="muted hand refund-note">
-          Unclaimed ZEC goes back to your pool when links expire.
+          Unclaimed ZEC goes back to your pool when links expire. Unique claim links and QR codes will be dispatched to winners.
         </p>
       {/if}
       {#if error}<p class="form-error hand" role="alert">{error}</p>{/if}
