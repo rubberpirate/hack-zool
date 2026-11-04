@@ -9,6 +9,7 @@ rust-version = "1.94"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
+zsplit-worker = { path = "apps/worker" }
 zsplit-domain = { path = "crates/domain" }
 zsplit-claims = { path = "crates/claims" }
 zsplit-store = { path = "crates/store" }
