@@ -1,3 +1,4 @@
+use anyhow::Context;
 use std::{
     net::SocketAddr,
     path::PathBuf,
@@ -29,6 +30,18 @@ fn key(name: &str) -> anyhow::Result<[u8; 32]> {
     decoded.zeroize();
     Ok(result)
 }
+
+fn bind_address(bind_addr: Option<&str>, port: Option<&str>) -> anyhow::Result<SocketAddr> {
+    match bind_addr {
+        Some(address) => address
+            .parse()
+            .context("Invalid BIND_ADDR; expected host:port"),
+        None => {
+            let port: u16 = port.unwrap_or("8080").parse().context("Invalid PORT")?;
+            Ok(SocketAddr::from(([127, 0, 0, 1], port)))
+        }
+    }
+}
 async fn stop_signal() {
     #[cfg(unix)]
     {
@@ -55,6 +68,14 @@ async fn main() -> anyhow::Result<()> {
         println!("{}", zsplit_api::ApiDoc::openapi().to_pretty_json()?);
         return Ok(());
     }
+    // Load the backend's configuration even when invoked from the repository root.
+    // Existing process environment variables keep precedence (including in Docker).
+    let env_file = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.env");
+    match dotenvy::from_path(env_file) {
+        Ok(()) => {}
+        Err(error) if error.not_found() => {}
+        Err(_) => anyhow::bail!("Could not parse the backend .env file"),
+    }
     let network: Network = std::env::var("ZCASH_NETWORK")
         .unwrap_or_else(|_| "testnet".into())
         .parse()?;
@@ -65,14 +86,22 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or_else(|_| "3".into())
         .parse()
         .map_err(|_| anyhow::anyhow!("Invalid confirmation configuration"))?;
-    let store = Store::connect(&required("DATABASE_URL")?).await?;
-    store.migrate().await?;
+    let store = Store::connect(&required("DATABASE_URL")?)
+        .await
+        .context("PostgreSQL connection failed; check DATABASE_URL and database credentials")?;
+    store
+        .migrate()
+        .await
+        .context("PostgreSQL migrations failed")?;
     let organizer_id: Uuid = required("ORGANIZER_ID")?
         .parse()
         .map_err(|_| anyhow::anyhow!("Invalid organizer ID"))?;
     store
         .ensure_organizer(organizer_id, "configured-organizer")
-        .await?;
+        .await
+        .context(
+            "Organizer setup failed; ORGANIZER_ID must match the configured database organizer",
+        )?;
     let engine: Arc<dyn PayoutEngine> = Arc::new(
         NativeWallet::open(WalletConfig {
             data_dir: PathBuf::from(
@@ -94,7 +123,7 @@ async fn main() -> anyhow::Result<()> {
                 .ok()
                 .map(PathBuf::from),
         })
-        .await?,
+        .await.context("Zcash wallet initialization failed; check the upstream, seed permissions, and wallet lock")?,
     );
     let organizer_secret = Zeroizing::new(required("ORGANIZER_API_TOKEN")?);
     let state = AppState::new(
@@ -107,6 +136,8 @@ async fn main() -> anyhow::Result<()> {
             allowed_origin: required("ALLOWED_ORIGIN")?,
             public_claim_origin: required("PUBLIC_CLAIM_ORIGIN")?,
             docs_enabled: std::env::var("ENABLE_DOCS").is_ok_and(|v| v == "true"),
+            development_endpoints_enabled: std::env::var("ENABLE_DEVELOPMENT_ENDPOINTS")
+                .is_ok_and(|v| v == "true"),
         },
         organizer_secret.as_str(),
         key("CLAIM_TOKEN_KEY")?,
@@ -139,10 +170,10 @@ async fn main() -> anyhow::Result<()> {
         let _ = worker_tx.send(true);
         result
     });
-    let address: SocketAddr = std::env::var("BIND_ADDR")
-        .unwrap_or_else(|_| "127.0.0.1:3001".into())
-        .parse()
-        .map_err(|_| anyhow::anyhow!("Invalid bind address"))?;
+    let address = bind_address(
+        std::env::var("BIND_ADDR").ok().as_deref(),
+        std::env::var("PORT").ok().as_deref(),
+    )?;
     let listener = tokio::net::TcpListener::bind(address).await?;
     tracing::info!(%address,%network,"api_started");
     let served = axum::serve(
@@ -164,4 +195,29 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|_| anyhow::anyhow!("Payout worker terminated unexpectedly"))??;
     served?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::bind_address;
+
+    #[test]
+    fn listener_uses_documented_port_and_explicit_bind_override() {
+        assert_eq!(
+            bind_address(None, None).unwrap().to_string(),
+            "127.0.0.1:8080"
+        );
+        assert_eq!(
+            bind_address(None, Some("8000")).unwrap().to_string(),
+            "127.0.0.1:8000"
+        );
+        assert_eq!(
+            bind_address(Some("0.0.0.0:8080"), Some("8000"))
+                .unwrap()
+                .to_string(),
+            "0.0.0.0:8080"
+        );
+        assert!(bind_address(None, Some("invalid")).is_err());
+        assert!(bind_address(Some("invalid"), Some("8080")).is_err());
+    }
 }

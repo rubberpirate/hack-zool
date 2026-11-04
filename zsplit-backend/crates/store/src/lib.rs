@@ -113,10 +113,10 @@ fn amount(v: u64) -> Result<i64, DomainError> {
     }
 }
 fn fresh(room: &Room) -> Result<(), DomainError> {
-    if let Some(at) = room.balance_updated_at {
-        if Utc::now().signed_duration_since(at).num_seconds() > 6 * 3600 {
-            return Err(DomainError::Unavailable);
-        }
+    if let Some(at) = room.balance_updated_at
+        && Utc::now().signed_duration_since(at).num_seconds() > 6 * 3600
+    {
+        return Err(DomainError::Unavailable);
     }
     if room.chain_height.saturating_sub(room.scanned_height) > 1000 {
         return Err(DomainError::Unavailable);
@@ -494,6 +494,40 @@ impl Store {
     pub async fn mark_manual_review(&self, id: Uuid, worker: Uuid) -> Result<(), DomainError> {
         self.worker_state(id, worker, "manual_review").await
     }
+    /// Only call after the native wallet proves no construction intent exists.
+    pub async fn requeue_unprepared_review(&self, id: Uuid) -> Result<(), DomainError> {
+        let mut tx = self.pool.begin().await.map_err(db)?;
+        let room: Uuid = sqlx::query_scalar("SELECT r.id FROM rooms r JOIN payout_jobs j ON j.room_id=r.id WHERE j.id=$1 FOR UPDATE OF r")
+            .bind(id).fetch_optional(&mut *tx).await.map_err(db)?.ok_or(DomainError::NotFound)?;
+        let claim: Uuid = sqlx::query_scalar("UPDATE payout_jobs SET state='queued',lease_owner=NULL,lease_until=NULL,next_attempt_at=now(),error_code='verified_unprepared_retry',updated_at=now() WHERE id=$1 AND state='manual_review' AND txid IS NULL AND raw_transaction IS NULL AND encrypted_ephemeral_receiver IS NOT NULL AND lease_owner IS NULL RETURNING claim_id")
+            .bind(id).fetch_optional(&mut *tx).await.map_err(db)?.ok_or(DomainError::Conflict)?;
+        let changed = sqlx::query("UPDATE claims SET state='funding_queued',version=version+1 WHERE id=$1 AND payout_id=$2 AND state='manual_review' AND NOT reservation_released")
+            .bind(claim).bind(id).execute(&mut *tx).await.map_err(db)?.rows_affected();
+        if changed != 1 {
+            return Err(DomainError::Conflict);
+        }
+        audit(
+            &mut tx,
+            room,
+            Some(claim),
+            "unprepared_payout_requeued",
+            "worker",
+        )
+        .await?;
+        tx.commit().await.map_err(db)
+    }
+    /// The caller must first establish that the native intent journal is empty for this payout.
+    pub async fn defer_unprepared(&self, id: Uuid, worker: Uuid) -> Result<(), DomainError> {
+        let mut tx = self.pool.begin().await.map_err(db)?;
+        let claim: Uuid = sqlx::query_scalar("UPDATE payout_jobs SET state='queued',next_attempt_at=now()+make_interval(secs=>LEAST(60,power(2,LEAST(attempts,6))::int)),lease_owner=NULL,lease_until=NULL,error_code='waiting_for_wallet',updated_at=now() WHERE id=$1 AND lease_owner=$2 AND state='preparing' AND txid IS NULL AND raw_transaction IS NULL AND encrypted_ephemeral_receiver IS NOT NULL RETURNING claim_id")
+            .bind(id).bind(worker).fetch_optional(&mut *tx).await.map_err(db)?.ok_or(DomainError::Conflict)?;
+        sqlx::query("UPDATE claims SET state='funding_queued',version=version+1 WHERE id=$1")
+            .bind(claim)
+            .execute(&mut *tx)
+            .await
+            .map_err(db)?;
+        tx.commit().await.map_err(db)
+    }
     pub async fn defer_job(&self, id: Uuid, worker: Uuid) -> Result<(), DomainError> {
         // Only serialized transactions are retried. A failed construction is ambiguous and quarantined.
         let mut tx = self.pool.begin().await.map_err(db)?;
@@ -635,21 +669,16 @@ impl Store {
         } else {
             validate_amounts(&room.payout_amounts, room.fee_reserve_zat as u64)?
         };
-        let max_confirmed = std::cmp::max(room.confirmed_zat, snapshot.confirmed_zat as i64);
-        let max_spendable = std::cmp::max(room.spendable_zat, snapshot.spendable_zat as i64);
-        let ready = if room.claims_issued || room.state == "ready" {
-            true
-        } else {
-            snapshot
-                .chain_height
-                .saturating_sub(snapshot.scanned_height)
-                <= 1000
-                && max_spendable >= required as i64
-        };
+        // Native balances can fall after spending or a reorg. A historical peak is not available money.
+        let ready = snapshot
+            .chain_height
+            .saturating_sub(snapshot.scanned_height)
+            <= 1000
+            && snapshot.spendable_zat >= required as u64;
         sqlx::query("UPDATE rooms SET confirmed_zat=$2,spendable_zat=$3,chain_height=$4,scanned_height=$5,balance_updated_at=now(),reserved_zat=$6,state=CASE WHEN state='closed' THEN state WHEN $7 THEN 'ready' ELSE 'paused' END WHERE id=$1")
             .bind(room.id)
-            .bind(max_confirmed)
-            .bind(max_spendable)
+            .bind(snapshot.confirmed_zat as i64)
+            .bind(snapshot.spendable_zat as i64)
             .bind(i64::from(snapshot.chain_height))
             .bind(i64::from(snapshot.scanned_height))
             .bind(reserve)

@@ -53,3 +53,9 @@ test('expiry counts down from funding and clamps expired links to zero', () => {
   assert.equal(daysLeft(room, 1_000_000 + 2 * 86_400_000), 5);
   assert.equal(daysLeft(room, 1_000_000 + 8 * 86_400_000), 0);
 });
+
+test('storage preserves unfunded rooms at the setup form minimum amount', () => {
+  const room = { ...demoRoom, amount: 0.0001, funded: false };
+  assert.equal(validRoom(room), true);
+  assert.equal(validRoom({ ...room, amount: 0.00009999 }), false);
+});

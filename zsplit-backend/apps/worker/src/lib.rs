@@ -109,11 +109,26 @@ pub async fn dispatch(
                 };
                 match engine.prepare_payout(command).await {
                     Ok(tx) => tx,
-                    Err(_) => {
-                        // A prepare error can follow a durable native commit; operator reconciliation is required.
-                        store.mark_manual_review(job.id, worker).await?;
-                        tracing::warn!(payout_id = %job.id, code = "prepare_requires_review");
-                        return Ok(());
+                    Err(error) => {
+                        // A retry is safe only if the native journal proves construction never started.
+                        match engine.recover_prepared(job.id).await {
+                            Ok(Some(tx)) => tx,
+                            Ok(None)
+                                if matches!(
+                                    error,
+                                    DomainError::InsufficientFunds | DomainError::Unavailable
+                                ) =>
+                            {
+                                store.defer_unprepared(job.id, worker).await?;
+                                tracing::warn!(payout_id = %job.id, code = "waiting_for_wallet");
+                                return Ok(());
+                            }
+                            _ => {
+                                store.mark_manual_review(job.id, worker).await?;
+                                tracing::warn!(payout_id = %job.id, code = "prepare_requires_review");
+                                return Ok(());
+                            }
+                        }
                     }
                 }
             }
@@ -137,6 +152,18 @@ pub async fn dispatch(
         }
     }
     Ok(())
+}
+
+/// Operator recovery requires exclusive access to the same native wallet as the running service.
+pub async fn requeue_verified_unprepared(
+    store: &Store,
+    engine: &dyn PayoutEngine,
+    payout: Uuid,
+) -> Result<(), DomainError> {
+    match engine.recover_prepared(payout).await {
+        Ok(None) => store.requeue_unprepared_review(payout).await,
+        _ => Err(DomainError::ReconciliationRequired),
+    }
 }
 
 async fn reconcile(

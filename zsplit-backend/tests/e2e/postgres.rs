@@ -18,6 +18,8 @@ struct TestEngine {
     broadcasts: Mutex<Vec<Vec<u8>>>,
     fail_broadcast: bool,
     fail_prepare: bool,
+    insufficient_funds: bool,
+    journal_exists: bool,
 }
 #[async_trait]
 impl PayoutEngine for TestEngine {
@@ -36,7 +38,10 @@ impl PayoutEngine for TestEngine {
     ) -> Result<PreparedTransaction, DomainError> {
         self.prepared.fetch_add(1, Ordering::SeqCst);
         if self.fail_prepare {
-            return Err(DomainError::Unavailable);
+            return Err(DomainError::ReconciliationRequired);
+        }
+        if self.insufficient_funds {
+            return Err(DomainError::InsufficientFunds);
         }
         Ok(test_transaction(command.payout_id))
     }
@@ -55,6 +60,9 @@ impl PayoutEngine for TestEngine {
         Ok(ChainTxStatus::Unknown)
     }
     async fn recover_prepared(&self, _: Uuid) -> Result<Option<PreparedTransaction>, DomainError> {
+        if self.journal_exists {
+            return Err(DomainError::ReconciliationRequired);
+        }
         Ok(None)
     }
 }
@@ -444,6 +452,132 @@ async fn expiration_releases_only_unredeemed_and_withdrawals_serialize() {
     assert_eq!(
         f.store.summary(f.room, f.owner).await.unwrap().reserved_zat,
         60_300_000
+    );
+    f.finish().await;
+}
+
+#[tokio::test]
+#[ignore = "requires DATABASE_URL and real PostgreSQL"]
+async fn definitely_unprepared_fund_wait_preserves_intent_and_can_retry() {
+    let f = Fixture::new(1).await;
+    f.issue().await;
+    let intent = f
+        .store
+        .enqueue_redemption(f.redeem(0, Uuid::new_v4()))
+        .await
+        .unwrap();
+    let worker = Uuid::new_v4();
+    let job = f.store.lease_job(worker).await.unwrap().unwrap();
+    let engine = TestEngine {
+        insufficient_funds: true,
+        ..Default::default()
+    };
+    zsplit_worker::dispatch(&f.store, &engine, &f.cipher, worker, job)
+        .await
+        .unwrap();
+    let row=sqlx::query("SELECT state,txid,encrypted_ephemeral_receiver IS NOT NULL receiver_kept FROM payout_jobs WHERE id=$1").bind(intent.payout_id).fetch_one(f.store.pool()).await.unwrap();
+    assert_eq!(row.get::<String, _>("state"), "queued");
+    assert!(row.get::<Option<String>, _>("txid").is_none());
+    assert!(row.get::<bool, _>("receiver_kept"));
+    assert!(engine.broadcasts.lock().unwrap().is_empty());
+    assert_eq!(
+        f.store.summary(f.room, f.owner).await.unwrap().reserved_zat,
+        200_000
+    );
+    f.finish().await;
+}
+
+#[tokio::test]
+#[ignore = "requires DATABASE_URL and real PostgreSQL"]
+async fn manual_recovery_refuses_native_intents_and_retains_reservations() {
+    let f = Fixture::new(1).await;
+    f.issue().await;
+    let intent = f
+        .store
+        .enqueue_redemption(f.redeem(0, Uuid::new_v4()))
+        .await
+        .unwrap();
+    let worker = Uuid::new_v4();
+    f.store.lease_job(worker).await.unwrap().unwrap();
+    f.store
+        .mark_manual_review(intent.payout_id, worker)
+        .await
+        .unwrap();
+    let ambiguous = TestEngine {
+        journal_exists: true,
+        ..Default::default()
+    };
+    assert!(
+        zsplit_worker::requeue_verified_unprepared(&f.store, &ambiguous, intent.payout_id)
+            .await
+            .is_err()
+    );
+    let state: String = sqlx::query_scalar("SELECT state FROM payout_jobs WHERE id=$1")
+        .bind(intent.payout_id)
+        .fetch_one(f.store.pool())
+        .await
+        .unwrap();
+    assert_eq!(state, "manual_review");
+    zsplit_worker::requeue_verified_unprepared(&f.store, &TestEngine::default(), intent.payout_id)
+        .await
+        .unwrap();
+    assert_eq!(
+        f.store.summary(f.room, f.owner).await.unwrap().reserved_zat,
+        200_000
+    );
+    let job = f.store.lease_job(worker).await.unwrap().unwrap();
+    assert_eq!(job.id, intent.payout_id);
+    f.store
+        .save_prepared(job.id, worker, &test_transaction(job.id))
+        .await
+        .unwrap();
+    f.store.mark_manual_review(job.id, worker).await.unwrap();
+    assert!(
+        zsplit_worker::requeue_verified_unprepared(&f.store, &TestEngine::default(), job.id)
+            .await
+            .is_err()
+    );
+    f.finish().await;
+}
+
+#[tokio::test]
+#[ignore = "requires DATABASE_URL and real PostgreSQL"]
+async fn spent_balances_do_not_remain_at_a_historical_peak() {
+    let f = Fixture::new(1).await;
+    f.issue().await;
+    f.store
+        .update_balance(BalanceSnapshot {
+            room_id: f.room,
+            confirmed_zat: 50_000_000,
+            spendable_zat: 40_000_000,
+            chain_height: 101,
+            scanned_height: 101,
+        })
+        .await
+        .unwrap();
+    let current = f.store.summary(f.room, f.owner).await.unwrap();
+    assert_eq!(current.confirmed_zat, 50_000_000);
+    assert_eq!(current.spendable_zat, 40_000_000);
+    f.store
+        .update_balance(BalanceSnapshot {
+            room_id: f.room,
+            confirmed_zat: 0,
+            spendable_zat: 0,
+            chain_height: 102,
+            scanned_height: 102,
+        })
+        .await
+        .unwrap();
+    assert_eq!(f.store.room(f.room, f.owner).await.unwrap().state, "paused");
+    assert!(
+        f.store
+            .enqueue_redemption(f.redeem(0, Uuid::new_v4()))
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        f.store.summary(f.room, f.owner).await.unwrap().reserved_zat,
+        200_000
     );
     f.finish().await;
 }

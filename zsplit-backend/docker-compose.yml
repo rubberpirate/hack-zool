@@ -30,6 +30,7 @@ services:
       - "8080:8080"
     environment:
       PORT: "8080"
+      BIND_ADDR: "0.0.0.0:8080"
       DATABASE_URL: "postgres://zsplit:zsplit_dev_password@postgres:5432/zsplit"
       ALLOWED_ORIGIN: "http://localhost:5173"
       PUBLIC_CLAIM_ORIGIN: "http://localhost:5173"

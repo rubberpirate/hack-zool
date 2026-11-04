@@ -1,0 +1,72 @@
+name: zool
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zsplit
+      POSTGRES_DB: zsplit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a fresh database password}
+    volumes:
+      - /opt/zool/state/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U zsplit -d zsplit']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  api:
+    image: zool-api:${ZOOL_RELEASE:-latest}
+    build:
+      context: ../../zsplit-backend
+    restart: unless-stopped
+    stop_grace_period: 5m
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      BIND_ADDR: 0.0.0.0:8080
+      DATABASE_URL: postgres://zsplit:${POSTGRES_PASSWORD}@postgres:5432/zsplit
+      ORGANIZER_ID: ${ORGANIZER_ID:?Set organizer UUID}
+      ORGANIZER_API_TOKEN: ${ORGANIZER_API_TOKEN:?Set organizer token}
+      CLAIM_TOKEN_KEY: ${CLAIM_TOKEN_KEY:?Set HMAC key}
+      RECEIVER_ENCRYPTION_KEY: ${RECEIVER_ENCRYPTION_KEY:?Set encryption key}
+      ALLOWED_ORIGIN: https://${DOMAIN:?Set public domain}
+      PUBLIC_CLAIM_ORIGIN: https://${DOMAIN}
+      ENABLE_DOCS: 'false'
+      ENABLE_DEVELOPMENT_ENDPOINTS: 'false'
+      ZCASH_NETWORK: testnet
+      ZCASH_CONFIRMATIONS: '3'
+      ZCASH_DATA_DIR: /app/data/wallet
+      ZCASH_SEED_FILE: /app/data/coordinator.seed
+      SAPLING_SPEND_PARAMS: /app/data/params/sapling-spend.params
+      SAPLING_OUTPUT_PARAMS: /app/data/params/sapling-output.params
+      LIGHTWALLETD_URL: https://testnet.zec.rocks:443
+      RUST_LOG: zsplit_api=info,zsplit_worker=info
+    volumes:
+      - /opt/zool/state/zcash:/app/data
+  web:
+    image: zool-web:${ZOOL_RELEASE:-latest}
+    build:
+      context: ../..
+    restart: unless-stopped
+    environment:
+      ORGANIZER_API_TOKEN: ${ORGANIZER_API_TOKEN}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-Zool <onboarding@resend.dev>}
+      PROTOCOL_HEADER: x-forwarded-proto
+      HOST_HEADER: x-forwarded-host
+      BODY_SIZE_LIMIT: '1048576'
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/zool/state/caddy:/data
+    depends_on:
+      - web
+      - api

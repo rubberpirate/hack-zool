@@ -33,7 +33,7 @@ COPY migrations/ migrations/
 COPY benches/ benches/
 
 # Build release binaries
-RUN cargo build --release --bin zsplit-api --bin zsplit-bench
+RUN cargo build --locked --release --bin zsplit-api --bin zsplit-bench --example wallet
 
 # ==============================================================================
 # Runtime Stage
@@ -57,12 +57,14 @@ RUN groupadd -g 1000 zsplit && \
 
 # Copy compiled binaries from builder
 COPY --from=builder /app/target/release/zsplit-api /usr/local/bin/zsplit-api
+COPY --from=builder /app/target/release/examples/wallet /usr/local/bin/zsplit-wallet
 COPY --from=builder /app/target/release/zsplit-bench /usr/local/bin/zsplit-bench
 COPY --from=builder /app/migrations /app/migrations
 
 USER zsplit
 
 ENV PORT=8080 \
+    BIND_ADDR=0.0.0.0:8080 \
     ZCASH_DATA_DIR=/app/data/wallet \
     ZCASH_NETWORK=testnet \
     ZCASH_CONFIRMATIONS=3

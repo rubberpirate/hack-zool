@@ -44,6 +44,7 @@ pub struct ApiConfig {
     pub allowed_origin: String,
     pub public_claim_origin: String,
     pub docs_enabled: bool,
+    pub development_endpoints_enabled: bool,
 }
 pub struct AppState {
     pub store: Store,
@@ -880,7 +881,6 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/v1/rooms", post(create_room))
         .route("/api/v1/rooms/{room_id}", get(get_room))
         .route("/api/v1/rooms/{room_id}/deposit", get(deposit))
-        .route("/api/v1/rooms/{room_id}/dev-confirm", post(dev_confirm))
         .route("/api/v1/rooms/{room_id}/claims", post(issue))
         .route("/api/v1/rooms/{room_id}/summary", get(summary))
         .route("/api/v1/rooms/{room_id}/events", get(events))
@@ -889,9 +889,13 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/v1/claims/{claim_id}/status", get(claim_status))
         .route("/api/v1/claims/{claim_id}/redeem", post(redeem))
         .route("/api/v1/claims/{claim_id}/sweep-report", post(sweep_report))
-        .route("/api/v1/frost/setup", post(frost_setup))
-        .route("/api/v1/frost/sign", post(frost_sign))
         .fallback(|| async { ApiError::from(DomainError::NotFound) });
+    if state.config.development_endpoints_enabled {
+        app = app
+            .route("/api/v1/rooms/{room_id}/dev-confirm", post(dev_confirm))
+            .route("/api/v1/frost/setup", post(frost_setup))
+            .route("/api/v1/frost/sign", post(frost_sign));
+    }
     if state.config.docs_enabled {
         app = app.merge(
             utoipa_swagger_ui::SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()),

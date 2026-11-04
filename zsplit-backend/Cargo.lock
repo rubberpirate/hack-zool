@@ -4620,6 +4620,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "chrono",
+ "dotenvy",
  "futures-util",
  "hex",
  "hmac 0.12.1",
@@ -4738,6 +4739,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "dotenvy",
  "hex",
  "sqlx",
  "tokio",

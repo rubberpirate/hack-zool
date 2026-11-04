@@ -88,7 +88,7 @@ export function validRoom(room: unknown): room is Room {
     r.count >= 1 &&
     r.count <= 100 &&
     Number.isFinite(r.amount) &&
-    r.amount >= 0.01 &&
+    r.amount >= 0.0001 &&
     r.amount <= 1000 &&
     [1, 3, 7, 14, 30].includes(r.expiry) &&
     ['equal', 'tiers'].includes(r.split) &&

@@ -1,4 +1,5 @@
 import { demoRoom, validRoom, daysLeft, claimAmount, type Room } from './model';
+import { randomUuid } from './uuid.ts';
 import {
   createBackendRoom,
   getBackendDeposit,
@@ -58,7 +59,12 @@ export function loadRoom() {
     if (storedDeposit) app.depositAddress = storedDeposit;
 
     const storedTickets = JSON.parse(localStorage.getItem('zool-issued-tickets') || localStorage.getItem('z-split-issued-tickets') || '[]');
-    if (Array.isArray(storedTickets)) app.issuedTickets = storedTickets;
+    if (Array.isArray(storedTickets)) {
+      app.issuedTickets = storedTickets.map((ticket) => ({
+        ...ticket,
+        id: ticket.claim_id || ticket.id,
+      }));
+    }
 
     const storedRecipients = JSON.parse(localStorage.getItem('zool-recipients') || localStorage.getItem('z-split-recipients') || '[]');
     if (Array.isArray(storedRecipients) && storedRecipients.length > 0) app.recipients = storedRecipients;
@@ -153,7 +159,7 @@ export function createRoom(
 ) {
   app.room = {
     ...values,
-    id: crypto.randomUUID().slice(0, 8),
+    id: randomUuid().slice(0, 8),
     claimed: [],
     gifts: [],
     closed: false,
@@ -195,12 +201,12 @@ export async function mintClaims() {
   }
 }
 
-export function claimLink(number: number) {
+export function claimLink(number: number, origin = '') {
   if (app.issuedTickets && app.issuedTickets[number - 1]) {
     const ticket = app.issuedTickets[number - 1];
-    return `${location.origin}/claim/${ticket.id}#t=${ticket.token}`;
+    return `${origin}/claim/${ticket.id}#t=${ticket.token}`;
   }
-  return `${location.origin}/claim/${app.room.id}-${number}`;
+  return `${origin}/claim/${app.room.id}-${number}`;
 }
 
 export async function copyText(value: string, success = 'Copied. Ready to hand out!') {

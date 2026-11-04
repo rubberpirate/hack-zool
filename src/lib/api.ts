@@ -3,7 +3,11 @@
  * Connects the Svelte frontend to the Axum backend.
  */
 
-const DEFAULT_AUTH_TOKEN = 'zsplit_local_dev_organizer_api_token_32chars';
+import { randomUuid } from './uuid.ts';
+
+const DEFAULT_AUTH_TOKEN = import.meta.env?.DEV
+  ? 'zsplit_local_dev_organizer_api_token_32chars'
+  : '';
 
 export function getAuthToken(): string {
   if (typeof localStorage !== 'undefined') {
@@ -64,12 +68,26 @@ export interface IssuedClaimTicket {
 }
 
 export interface ClaimMetadata {
-  id: string;
-  room_id: string;
+  claim_id: string;
   network: string;
   amount_zat: number;
-  status: 'reserved' | 'funding_queued' | 'funding_broadcast' | 'funded_confirmed' | 'expired';
+  status:
+    | 'reserved'
+    | 'funding_queued'
+    | 'preparing'
+    | 'funding_broadcast'
+    | 'funded_unconfirmed'
+    | 'funded_confirmed'
+    | 'expired'
+    | 'cancelled'
+    | 'ambiguous_broadcast'
+    | 'reconciling'
+    | 'reorged'
+    | 'manual_review';
   expires_at: string;
+  txid?: string | null;
+  confirmations?: number;
+  sweep_reported?: boolean;
 }
 
 export interface RedeemResponse {
@@ -156,11 +174,23 @@ export async function issueBackendClaims(roomId: string): Promise<IssuedClaimTic
     throw new Error(err.message || `Failed to issue claims: ${res.statusText}`);
   }
   const data = await res.json();
-  return Array.isArray(data) ? data : (data.tickets || []);
+  const tickets = Array.isArray(data) ? data : data.tickets || [];
+  return tickets.map((ticket: IssuedClaimTicket & { claim_id?: string }) => ({
+    ...ticket,
+    id: ticket.claim_id || ticket.id,
+  }));
 }
 
-export async function getBackendClaim(claimId: string): Promise<ClaimMetadata> {
-  const res = await fetch(`/api/v1/claims/${claimId}`);
+export async function getBackendClaim(
+  claimId: string,
+  token: string,
+  signal?: AbortSignal
+): Promise<ClaimMetadata> {
+  const res = await fetch(`/api/v1/claims/${claimId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+    signal,
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `Failed to get claim: ${res.statusText}`);
@@ -168,8 +198,16 @@ export async function getBackendClaim(claimId: string): Promise<ClaimMetadata> {
   return res.json();
 }
 
-export async function getBackendClaimStatus(claimId: string): Promise<{ status: string; txid?: string }> {
-  const res = await fetch(`/api/v1/claims/${claimId}/status`);
+export async function getBackendClaimStatus(
+  claimId: string,
+  token: string,
+  signal?: AbortSignal
+): Promise<ClaimMetadata> {
+  const res = await fetch(`/api/v1/claims/${claimId}/status`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+    signal,
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `Failed to get claim status: ${res.statusText}`);
@@ -181,17 +219,20 @@ export async function redeemBackendClaim(
   claimId: string,
   token: string,
   receiver: string,
-  idempotencyKey = crypto.randomUUID()
+  idempotencyKey = randomUuid(),
+  walletPersisted = false
 ): Promise<RedeemResponse> {
   const res = await fetch(`/api/v1/claims/${claimId}/redeem`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      token,
-      receiver,
+      ephemeral_receiver: receiver,
       idempotency_key: idempotencyKey,
+      client_network: 'testnet',
+      wallet_persisted: walletPersisted,
     }),
   });
   if (!res.ok) {
@@ -201,14 +242,14 @@ export async function redeemBackendClaim(
   return res.json();
 }
 
-export async function reportBackendSweep(claimId: string): Promise<void> {
-  await fetch(`/api/v1/claims/${claimId}/sweep-report`, {
+export async function reportBackendSweep(claimId: string, token: string): Promise<void> {
+  const res = await fetch(`/api/v1/claims/${claimId}/sweep-report`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ claim_id: claimId }),
   });
+  if (!res.ok) throw new Error('Could not record the unverified sweep report.');
 }
 
 export interface FrostSetupResponse {

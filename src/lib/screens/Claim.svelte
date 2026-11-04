@@ -5,16 +5,18 @@
   import { app, redeem, copyText, notify } from '#lib/state.svelte.ts';
   import {
     getBackendClaim,
+    getBackendClaimStatus,
     redeemBackendClaim,
     reportBackendSweep,
     type ClaimMetadata,
   } from '#lib/api.ts';
-  import { claimAmount, daysLeft } from '#lib/model.ts';
+  import { claimAmount, daysLeft, formatZatToZec } from '#lib/model.ts';
   import Action from '#lib/components/Action.svelte';
   import Art from '#lib/components/Art.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import QR from '#lib/components/QR.svelte';
   import { enter } from '#lib/motion.ts';
+  import { randomUuid } from '#lib/uuid.ts';
 
   const token = $derived(page.url.pathname.split('/')[2]);
   const isBackendClaim = $derived(
@@ -42,23 +44,89 @@
   let error = $state('');
   let busy = $state(false);
   let confirmed = $state(false);
+  let walletPersisted = $state(false);
+  let redemptionKey = '';
   let scanner: HTMLDialogElement;
+  let statusChecking = $state(false);
+  let statusError = $state('');
+  let statusCheckedAt = $state('');
+  let refreshStatus = $state<() => void>(() => {});
 
-  onMount(async () => {
+  const paymentConfirmed = $derived(backendClaim?.status === 'funded_confirmed');
+  const redemptionRecorded = $derived(!!backendClaim && !['reserved', 'expired', 'cancelled'].includes(backendClaim.status));
+  const transactionBroadcast = $derived(!!backendClaim?.txid && ['funding_broadcast', 'funded_unconfirmed', 'funded_confirmed'].includes(backendClaim.status));
+  const progress = $derived(({
+    reserved: { title: 'READY TO CLAIM.', text: 'This ticket has not been redeemed yet.', active: false },
+    funding_queued: { title: 'PAYOUT QUEUED.', text: 'Your claim is reserved. Waiting for the wallet worker to prepare the payment.', active: true },
+    preparing: { title: 'PREPARING PAYOUT.', text: 'Building and proving your shielded transaction. This may take a little while.', active: true },
+    funding_broadcast: { title: 'PAYMENT SENT.', text: 'The transaction was broadcast. Waiting for it to be mined on Zcash testnet.', active: true },
+    funded_unconfirmed: { title: 'PAYMENT MINED.', text: 'Your transaction is in a block. Waiting for the required confirmations.', active: true },
+    funded_confirmed: { title: 'PAYMENT CONFIRMED.', text: 'Funding to your claim wallet is confirmed. You can sweep onward locally in your wallet.', active: false },
+    manual_review: { title: 'PAYOUT PAUSED.', text: 'The coordinator must review this payout before it can continue. Contact your organizer; no payment is confirmed yet.', active: false },
+    ambiguous_broadcast: { title: 'CHECKING PAYMENT.', text: 'The wallet is checking an uncertain broadcast. Your existing payout remains reserved.', active: true },
+    reconciling: { title: 'CHECKING PAYMENT.', text: 'Checking the existing transaction against the chain.', active: true },
+    reorged: { title: 'RECHECKING PAYMENT.', text: 'Chain confirmations changed. The wallet is rechecking your existing payment.', active: true },
+    expired: { title: 'CLAIM EXPIRED.', text: 'This unused ticket expired. Contact your organizer.', active: false },
+    cancelled: { title: 'CLAIM CANCELLED.', text: 'This ticket was cancelled. Contact your organizer.', active: false },
+  } as Record<string, { title: string; text: string; active: boolean }>)[backendClaim?.status || ''] || {
+    title: statusError ? 'STATUS UNAVAILABLE.' : 'CHECKING STATUS.', text: statusError ? 'Could not reach the latest payout status. Refresh or contact your organizer.' : 'Checking your payout with the coordinator.', active: !statusError,
+  });
+
+  onMount(() => {
     // Extract bearer token from URL fragment (#t=...)
     if (typeof window !== 'undefined' && location.hash) {
       const match = location.hash.match(/[#&]t=([^&]+)/);
       if (match) bearerToken = match[1];
     }
-    // If it's a real backend claim, fetch its metadata
-    if (isBackendClaim) {
+    if (!isBackendClaim) return;
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    let failures = 0;
+    const check = async () => {
+      if (controller.signal.aborted || statusChecking) return;
+      clearTimeout(timer);
+      statusChecking = true;
+      const request = new AbortController();
+      const abortRequest = () => request.abort();
+      controller.signal.addEventListener('abort', abortRequest, { once: true });
+      const timeout = setTimeout(abortRequest, 15_000);
       try {
-        const metadata = await getBackendClaim(token);
+        if (!bearerToken) throw new Error('The claim token is missing. Open the complete link from your email.');
+        const metadata = stage === 3
+          ? await getBackendClaimStatus(token, bearerToken, request.signal)
+          : await getBackendClaim(token, bearerToken, request.signal);
+        if (controller.signal.aborted) return;
         backendClaim = metadata;
+        payoutTxid = metadata.txid || '';
+        sweptReported = metadata.sweep_reported || false;
+        statusError = '';
+        statusCheckedAt = new Date().toLocaleTimeString();
+        failures = 0;
+        if (stage !== 3 && metadata.status !== 'reserved') {
+          await goto(`/claim/${token}/done#t=${bearerToken}`, { replace: true });
+        }
       } catch (e) {
-        console.warn('Could not fetch claim metadata from backend:', e);
+        if (!controller.signal.aborted) {
+          failures++;
+          statusError = request.signal.aborted ? 'The status check timed out. Please try again.'
+            : e instanceof Error ? e.message : 'Could not refresh payout status.';
+        }
+      } finally {
+        clearTimeout(timeout);
+        controller.signal.removeEventListener('abort', abortRequest);
+        if (!controller.signal.aborted) {
+          statusChecking = false;
+          if (bearerToken && !['expired', 'cancelled'].includes(backendClaim?.status || '')) {
+            const delay = failures ? Math.min(30_000, 3000 * 2 ** failures)
+              : ['funded_confirmed', 'manual_review'].includes(backendClaim?.status || '') ? 15_000 : 3000;
+            timer = setTimeout(check, delay);
+          }
+        }
       }
-    }
+    };
+    refreshStatus = () => { void check(); };
+    void check();
+    return () => { controller.abort(); clearTimeout(timer); };
   });
 
   $effect(() => {
@@ -107,7 +175,7 @@
       (!isBackendClaim && !room.funded) ||
       (!isBackendClaim && daysLeft(room) === 0) ||
       (!isBackendClaim && room.closed) ||
-      (used && stage !== 3 && !confirmed)
+      (used && !isBackendClaim && stage !== 3 && !confirmed)
   );
 
   async function sweep(event: SubmitEvent) {
@@ -132,10 +200,14 @@
         if (!bearerToken) {
           throw new Error('Claim bearer token missing from URL fragment (#t=...).');
         }
-        const res = await redeemBackendClaim(token, bearerToken, address.trim());
+        if (!walletPersisted) {
+          throw new Error('Confirm that this is a separate claim wallet and that its recovery backup is saved.');
+        }
+        redemptionKey ||= randomUuid();
+        const res = await redeemBackendClaim(token, bearerToken, address.trim(), redemptionKey, walletPersisted);
         confirmed = true;
         payoutTxid = res.txid || '';
-        await goto(`/claim/${token}/done`);
+        await goto(`/claim/${token}/done#t=${bearerToken}`);
       } catch (err: any) {
         error = err.message || 'Redemption failed. Check your token or address.';
       } finally {
@@ -168,11 +240,11 @@
   async function handleSweepReport() {
     if (isBackendClaim) {
       try {
-        await reportBackendSweep(token);
+        await reportBackendSweep(token, bearerToken);
         sweptReported = true;
         notify('Sweep completion recorded!');
       } catch (e) {
-        console.error(e);
+        notify(e instanceof Error ? e.message : 'Could not record the sweep report. Try again.');
       }
     }
   }
@@ -191,7 +263,7 @@
 >
 <main id="main" class="claim-page" class:claim-done={stage === 3}>
   {#if !app.ready}<div class="claim-loading hand" role="status">Opening your one-time link…</div>
-  {:else if blocked || (stage === 3 && !used && !confirmed)}
+  {:else if blocked || (stage === 3 && !isBackendClaim && !used && !confirmed)}
     <section class="claim-unavailable" use:enter>
       <Art kind="envelope" />
       <p class="hand">
@@ -289,11 +361,11 @@
               ></span
             ></button
           >{#if mode === 'wallet'}<div class="wallet-field">
-              <label for="wallet-address">YOUR SHIELDED RECEIVING ADDRESS (TESTNET)</label>
+              <label for="wallet-address">{isBackendClaim ? 'CLAIM-ONLY SHIELDED RECEIVING ADDRESS (TESTNET)' : 'YOUR SHIELDED RECEIVING ADDRESS (TESTNET)'}</label>
               <div class="scan-input">
                 <input
                   id="wallet-address"
-                  placeholder="paste utest1... address from Zingo"
+                  placeholder={isBackendClaim ? 'utest1... from a separate claim wallet' : 'paste utest1... address from Zingo'}
                   bind:value={address}
                   autocomplete="off"
                   autocapitalize="off"
@@ -304,6 +376,13 @@
                   >SAMPLE</button
                 >
               </div>
+              {#if isBackendClaim}
+                <p class="hand muted">Create a separate claim wallet and save its recovery backup. The coordinator receives this address; keep your later personal sweep destination inside your wallet.</p>
+                <label class="hand" style="display:flex;gap:0.5rem;align-items:flex-start;margin-top:0.75rem">
+                  <input type="checkbox" bind:checked={walletPersisted} />
+                  This is a separate claim wallet, and I have saved its recovery backup.
+                </label>
+              {/if}
             </div>{/if}
         </div>
         {#if !isBackendClaim && room.giftCards}<div class="payout-option" class:active={mode === 'gift'}>
@@ -334,7 +413,7 @@
     <div class="claim-bottom payout-bottom">
       <p id="address-privacy" class="hand muted payout-privacy">
         {mode === 'wallet'
-          ? 'this address only goes to the network. the organizer never sees it.'
+          ? isBackendClaim ? 'Only the claim wallet receives this payout. Sweep onward locally after confirmation.' : 'this address only goes to the network. the organizer never sees it.'
           : 'just a gift card. no wallet needed. no personal details saved.'}
       </p>
       <button type="submit" form="payout-form" class="action primary has-cap" disabled={busy}
@@ -356,41 +435,63 @@
   {:else}
     <section class="done-content" use:enter>
       <div class="success-art coin-check-art" use:enter={'art'}>
-        <Art kind="coin-check" />
+        <Art kind={isBackendClaim && !paymentConfirmed ? 'envelope' : 'coin-check'} />
       </div>
-      <p class="hand claim-kicker">link burned. z-coin swept with verified tick.</p>
-      <h1><mark>ALL</mark><br />YOURS.</h1>
-      <p class="hand done-description">
-        {amount.toFixed(4)} ZEC is on its way to {gift
-          ? 'your gift card.'
-          : 'your shielded wallet.'}
-      </p>
-      <ul class="done-checklist hand">
-        <li><span class="check-mini"><Icon name="check" size={20} /></span>Claim link verified & redeemed</li>
-        <li>
-          <span class="check-mini"><Icon name="check" size={20} /></span>{gift
-            ? 'Demo gift card ready'
-            : 'Shielded transaction dispatched by Zool worker'}
-        </li>
-        <li>
-          <span class="check-mini" class:pending={!gift}
-            >{#if gift}<Icon name="check" size={20} />{/if}</span
-          >{gift ? 'Ready for a little treat' : 'Confirming on Zcash Testnet (check Zingo wallet)'}
-        </li>
-      </ul>
-
       {#if isBackendClaim}
+        <h1 class="payment-title">{progress.title}</h1>
+        <div class="payment-status-summary" role="status" aria-label="Payout status" aria-live="polite" aria-atomic="true">
+          {#if progress.active}
+            <svg class="payment-spinner" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2" />
+              <path d="M12 3a9 9 0 0 1 9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          {/if}
+          <p class="hand">{progress.text}</p>
+        </div>
+        {#if backendClaim}<p class="hand payment-amount">Amount: {formatZatToZec(backendClaim.amount_zat)} TAZ</p>{/if}
+        {#if statusError}<p class="form-error hand" role="alert">Status update failed: {statusError}</p>{/if}
+        <div class="payment-refresh">
+          <button type="button" class="pill" disabled={statusChecking} onclick={refreshStatus}>
+            {statusChecking ? 'Checking status…' : 'Refresh status'}
+          </button>
+          {#if statusCheckedAt}<span class="hand muted">Last checked {statusCheckedAt}</span>{/if}
+        </div>
+        <ol class="done-checklist hand" aria-label="Payout progress">
+          <li><span class="check-mini" class:pending={!redemptionRecorded}>
+            {#if redemptionRecorded}<Icon name="check" size={20} />{/if}
+          </span>{redemptionRecorded ? 'Redemption recorded' : backendClaim?.status === 'reserved' ? 'Claim not yet submitted' : backendClaim ? 'Ticket unavailable' : 'Checking claim'}</li>
+          <li><span class="check-mini" class:pending={!transactionBroadcast}>
+            {#if transactionBroadcast}<Icon name="check" size={20} />{/if}
+          </span>{transactionBroadcast ? 'Transaction broadcast' : 'Broadcast not confirmed yet'}</li>
+          <li><span class="check-mini" class:pending={!paymentConfirmed}>
+            {#if paymentConfirmed}<Icon name="check" size={20} />{/if}
+          </span>{paymentConfirmed ? 'Funding confirmed in your claim wallet' : 'Funding not yet confirmed'}</li>
+        </ol>
+        {#if payoutTxid}
+          <div class="payment-transaction">
+            <p class="hand">Transaction ID</p><code>{payoutTxid}</code>
+            <p class="hand">Confirmations: {backendClaim?.confirmations || 0}</p>
+            <button type="button" class="text-link" onclick={() => copyText(payoutTxid, 'Transaction ID copied.')}>Copy transaction ID</button>
+          </div>
+        {/if}
+        {#if backendClaim?.status === 'reserved'}
+          <Action href={`/claim/${token}/payout#t=${bearerToken}`}>Continue to claim</Action>
+        {/if}
         <div class="sweep-report-box">
-          <p class="hand muted">Once you see funds in your wallet, you can report the sweep complete:</p>
-          <button
-            type="button"
-            class="pill"
-            disabled={sweptReported}
-            onclick={handleSweepReport}
-          >
-            {sweptReported ? '✓ Sweep Self-Reported' : 'Mark as Swept to Personal Wallet'}
+          <p class="hand muted">{paymentConfirmed ? 'After you sweep locally in your wallet, you can report completion below. This is a self-report, not chain verification.' : 'Local sweeping is available after funding is confirmed in your claim wallet.'}</p>
+          <button type="button" class="pill" disabled={sweptReported || !paymentConfirmed} onclick={handleSweepReport}>
+            {sweptReported ? 'Sweep self-reported' : 'Mark as swept locally'}
           </button>
         </div>
+      {:else}
+        <p class="hand claim-kicker">link burned. z-coin swept with verified tick.</p>
+        <h1><mark>ALL</mark><br />YOURS.</h1>
+        <p class="hand done-description">{amount.toFixed(4)} ZEC is on its way to {gift ? 'your gift card.' : 'your shielded wallet.'}</p>
+        <ul class="done-checklist hand">
+          <li><span class="check-mini"><Icon name="check" size={20} /></span>Claim link verified & redeemed</li>
+          <li><span class="check-mini"><Icon name="check" size={20} /></span>{gift ? 'Demo gift card ready' : 'Shielded transaction dispatched by Zool worker'}</li>
+          <li><span class="check-mini" class:pending={!gift}>{#if gift}<Icon name="check" size={20} />{/if}</span>{gift ? 'Ready for a little treat' : 'Confirming on Zcash Testnet (check Zingo wallet)'}</li>
+        </ul>
       {/if}
 
       {#if gift}<button
@@ -444,4 +545,15 @@
     gap: 0.5rem;
     align-items: center;
   }
+
+
+  .done-content h1.payment-title { font-size: clamp(2.5rem, 12vw, 6rem); line-height: 1.05; margin-bottom: 1.5rem; }
+  .payment-status-summary { display: flex; align-items: flex-start; gap: 0.75rem; margin-block: 1rem; }
+  .payment-status-summary p, .payment-amount { font-size: 1.35rem; line-height: 1.4; }
+  .payment-spinner { flex: 0 0 1.5rem; width: 1.5rem; height: 1.5rem; margin-top: 0.2rem; animation: payment-spin 1s linear infinite; }
+  .payment-refresh { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-block: 1.25rem; }
+  .payment-transaction { margin-block: 1.5rem; min-width: 0; }
+  .payment-transaction code { display: block; overflow-wrap: anywhere; margin-block: 0.5rem; }
+  @keyframes payment-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .payment-spinner { animation: none; } }
 </style>

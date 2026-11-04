@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { app, claimLink, copyText, notify } from '#lib/state.svelte.ts';
   import { claimAmount, daysLeft, formatZatToZec, prizeRankLabel } from '#lib/model.ts';
+  import { getAuthToken } from '#lib/api.ts';
   import Action from '#lib/components/Action.svelte';
   import Art from '#lib/components/Art.svelte';
   import QR from '#lib/components/QR.svelte';
@@ -19,8 +20,9 @@
   let printing = $state(false);
   let showEmailModal = $state(false);
   let sendingEmails = $state(false);
-  let emailApiKey = $state(typeof localStorage !== 'undefined' ? localStorage.getItem('zool-resend-key') || '' : '');
   let emailStatus = $state('');
+  let emailSuccess = $state(false);
+  let emailFailures = $state<{ number: number; error: string }[]>([]);
   let bulkEmailText = $state('');
   let recipientList = $state<string[]>([]);
 
@@ -53,7 +55,7 @@
           number,
           amountZec: formatZatToZec(amountZat),
           prizeLabel: customRec?.rank || prizeRankLabel(number, app.room.split),
-          claimUrl: claimLink(number),
+          claimUrl: claimLink(number, origin),
         };
       })
       .filter((r) => !!r.email);
@@ -63,11 +65,9 @@
       return;
     }
 
-    if (emailApiKey) {
-      try { localStorage.setItem('zool-resend-key', emailApiKey); } catch {}
-    }
-
     sendingEmails = true;
+    emailSuccess = false;
+    emailFailures = [];
     emailStatus = `Sending ${toSend.length} claim email(s) via Resend…`;
 
     try {
@@ -75,19 +75,25 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${getAuthToken()}`,
         },
         body: JSON.stringify({
-          apiKey: emailApiKey,
           roomName: app.room.name || 'Zool Payout',
           recipients: toSend,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to dispatch emails');
-
-      emailStatus = `✓ Successfully delivered ${data.delivered} of ${toSend.length} emails!`;
-      notify(`Sent ${data.delivered} claim email(s) via Resend!`);
+      emailFailures = data.accepted > 0 && Array.isArray(data.results)
+        ? data.results.filter((r: { success: boolean }) => !r.success)
+        : [];
+      const accepted = Number.isInteger(data.accepted) ? data.accepted : 0;
+      if (!res.ok || data.success !== true || accepted !== toSend.length) {
+        throw new Error(`${accepted} of ${toSend.length} emails accepted. ${data.error || 'Resend did not accept every email.'}`);
+      }
+      emailSuccess = true;
+      emailStatus = `✓ Resend accepted ${accepted} of ${toSend.length} emails. Inbox delivery is pending.`;
+      notify(`Resend accepted ${accepted} claim email(s).`);
     } catch (err: any) {
       emailStatus = `Error: ${err.message || 'Failed to send'}`;
       notify(`Email failed: ${err.message || 'Error'}`);
@@ -152,7 +158,7 @@
           Math.round(claimAmount(app.room, n) * 100_000_000)
         );
         const rank = prizeRankLabel(n, app.room.split);
-        return `${String(n).padStart(2, '0')} (${rank}) — ${amt} TAZ — ${claimLink(n)}`;
+        return `${String(n).padStart(2, '0')} (${rank}) — ${amt} TAZ — ${claimLink(n, origin)}`;
       })
       .join('\n');
     if (!links) {
@@ -201,7 +207,7 @@
           class="qr-card"
           class:claimed={app.room.claimed.includes(number)}
           class:closed={unavailable}
-          href={claimLink(number)}
+          href={claimLink(number, origin)}
           aria-label={`Claim ${number}, ${prizeRankLabel(number, app.room.split)}, ${formatZatToZec(app.issuedTickets?.[number - 1]?.amount_zat ?? Math.round(claimAmount(app.room, number) * 100_000_000))} TAZ, ${app.room.claimed.includes(number) ? 'claimed' : unavailable ? unavailableStatus.toLowerCase() : 'open'}`}
           ><div class="qr-card-heading">
             <h2>No. {String(number).padStart(2, '0')}</h2>
@@ -223,7 +229,7 @@
           {:else if unavailable}<div class="claimed-art closed-art">
               <span><Icon name="close" size={48} /></span>
             </div>{:else if origin}<QR
-              value={claimLink(number)}
+              value={claimLink(number, origin)}
             />{:else}<div class="qr-image"></div>{/if}
           <div class="qr-card-foot hand">
             <span>
@@ -274,7 +280,7 @@
     >
       <div
         class="modal-card"
-        style="background: #ffffff; color: #111; max-width: 620px; width: 100%; border: 2px solid #000; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);"
+        style="background: #ffffff; color: #111; max-width: 620px; width: 100%; max-height: calc(100dvh - 2rem); overflow-y: auto; border: 2px solid #000; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);"
         onclick={(e) => e.stopPropagation()}
         onkeydown={(e) => { if (e.key === 'Escape') showEmailModal = false; }}
         tabindex="-1"
@@ -325,9 +331,16 @@
         </div>
 
         {#if emailStatus}
-          <p style="font-size: 0.85rem; font-weight: bold; color: {emailStatus.startsWith('✓') ? '#2ecc71' : '#e53e3e'}; margin-bottom: 0.75rem;">
+          <p role={emailSuccess ? 'status' : 'alert'} style="font-size: 0.85rem; font-weight: bold; color: {emailSuccess ? '#16803c' : '#b91c1c'}; margin-bottom: 0.75rem;">
             {emailStatus}
           </p>
+          {#if emailFailures.length}
+            <ul class="email-failures" style="font-size: 0.8rem; color: #b91c1c; margin-bottom: 0.75rem; max-height: 8rem; overflow-y: auto;">
+              {#each emailFailures as failure}
+                <li>Claim {String(failure.number).padStart(2, '0')}: {failure.error}</li>
+              {/each}
+            </ul>
+          {/if}
         {/if}
 
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">

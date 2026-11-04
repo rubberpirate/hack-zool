@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
+  import { dev } from '$app/env';
   import {
     app,
     createRealRoom,
@@ -11,7 +12,7 @@
     copyText,
   } from '#lib/state.svelte.ts';
   import { poolTotal, formatZatToZec, formatZecClean } from '#lib/model.ts';
-  import { setupBackendFrost, signBackendFrost, devConfirmBackendDeposit } from '#lib/api.ts';
+  import { setupBackendFrost, signBackendFrost, devConfirmBackendDeposit, getAuthToken } from '#lib/api.ts';
   import Action from '#lib/components/Action.svelte';
   import Art from '#lib/components/Art.svelte';
   import Icon from '#lib/components/Icon.svelte';
@@ -38,7 +39,7 @@
   let uploadedFileName = $state('');
   let recipients = $state(
     app.recipients && app.recipients.length > 0
-      ? structuredClone(app.recipients)
+      ? $state.snapshot(app.recipients)
       : [
           { rank: '1st Place', email: 'alice@zkproof.org', prize: 0.001, required: true },
           { rank: '2nd Place', email: 'bob@cryptomail.io', prize: 0.0005, required: false },
@@ -165,6 +166,10 @@
   }
 
   onMount(() => {
+    if (!dev && !getAuthToken()) {
+      void goto('/organizer');
+      return;
+    }
     if (fund && app.backendRoom?.id) {
       void checkDepositStatus();
       pollInterval = setInterval(async () => {
@@ -295,7 +300,7 @@
       split = 'tiers';
       giftCards = app.room.giftCards;
       if (app.recipients && app.recipients.length > 0) {
-        recipients = structuredClone(app.recipients);
+        recipients = $state.snapshot(app.recipients);
       }
     }
   });
@@ -365,7 +370,7 @@
               <button type="button" class="text-link" disabled={checking} onclick={refreshDeposit}>
                 {checking ? 'Checking…' : '↻ Refresh Status'}
               </button>
-              {#if !app.room.funded}
+              {#if dev && !app.room.funded}
                 <button type="button" class="text-link dev-shortcut" onclick={simulateFunding}>
                   ⚡ Confirm Instantly (Dev)
                 </button>
@@ -373,6 +378,7 @@
             </div>
           </div>
 
+          {#if dev}
           <div class="frost-threshold-card" style="margin-top: 1rem; padding: 1rem; background: var(--bg-surface, #1e1e24); border: 1px solid var(--border-color, #333); border-radius: 8px;">
             <div class="frost-header" style="display: flex; align-items: center; justify-content: space-between;">
               <span class="deposit-tag">🛡️ ZCASH FOUNDATION FROST</span>
@@ -421,6 +427,7 @@
               </div>
             {/if}
           </div>
+          {/if}
         </div>
         <button type="button" class="text-link" onclick={() => goto('/room/new')}
           >← Edit room details</button
