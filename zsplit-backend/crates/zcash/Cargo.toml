@@ -32,3 +32,6 @@ serde_json.workspace = true
 hex.workspace = true
 tempfile.workspace = true
 rand10.workspace = true
+
+sha2.workspace = true
+rand_chacha.workspace = true
