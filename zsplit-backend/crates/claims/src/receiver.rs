@@ -33,6 +33,11 @@ pub fn validate_receiver(receiver: &str, network: Network) -> Result<(), DomainE
         return Err(DomainError::NetworkMismatch);
     }
     let address = UnifiedAddress::try_from(container).map_err(|_| DomainError::InvalidInput)?;
+    // The reservation may wait in a queue; this API has no chain/time expiry context.
+    // Never strip or silently override sender-visible address expiration policy.
+    if address.expiry_height().is_some() || address.expiry_time().is_some() {
+        return Err(DomainError::InvalidInput);
+    }
     if address.orchard().is_none() {
         return Err(DomainError::InvalidInput);
     }
@@ -156,6 +161,32 @@ mod tests {
             assert!(validate_receiver(address, Network::Testnet).is_err());
         }
         assert!(validate_receiver(&"a".repeat(MAX_RECEIVER_BYTES + 1), Network::Testnet).is_err());
+    }
+
+    #[test]
+    fn rejects_expiring_receivers_instead_of_stripping_policy() {
+        let encoded = orchard_address(NetworkType::Test);
+        let (_, _, container) = EncodedUnifiedAddress::decode(&encoded).unwrap();
+        let address = UnifiedAddress::try_from(container).unwrap();
+        for (height, time) in [
+            (
+                Some(zcash_protocol::consensus::BlockHeight::from_u32(1)),
+                None,
+            ),
+            (None, Some(1)),
+        ] {
+            let expiring = UnifiedAddress::from_receivers(
+                address.orchard().copied(),
+                None,
+                None,
+                height,
+                time,
+            )
+            .unwrap()
+            .to_zcash_address(NetworkType::Test)
+            .to_string();
+            assert!(validate_receiver(&expiring, Network::Testnet).is_err());
+        }
     }
 
     #[test]

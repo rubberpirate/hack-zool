@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zsplit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zsplit
+      POSTGRES_PASSWORD: zsplit_dev_password
+      POSTGRES_DB: zsplit
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zsplit -d zsplit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zsplit-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgres://zsplit:zsplit_dev_password@postgres:5432/zsplit"
+      ALLOWED_ORIGIN: "http://localhost:5173"
+      PUBLIC_CLAIM_ORIGIN: "http://localhost:5173"
+      ENABLE_DOCS: "true"
+      ORGANIZER_ID: "00000000-0000-0000-0000-000000000001"
+      ORGANIZER_API_TOKEN: "zsplit_local_dev_organizer_api_token_32chars"
+      CLAIM_TOKEN_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      RECEIVER_ENCRYPTION_KEY: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+      ZCASH_NETWORK: "testnet"
+      ZCASH_CONFIRMATIONS: "3"
+      ZCASH_DATA_DIR: "/app/data/wallet"
+      ZCASH_SEED_FILE: "/app/data/coordinator.seed"
+      LIGHTWALLETD_URL: "https://testnet.zec.rocks:443"
+    volumes:
+      - walletdata:/app/data
+
+volumes:
+  pgdata:
+  walletdata:

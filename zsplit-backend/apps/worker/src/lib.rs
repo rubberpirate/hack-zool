@@ -41,11 +41,19 @@ pub async fn run(
             }
             _ = ticker.tick() => {
                 if *shutdown.borrow() { return Ok(()); }
+                store.expire_claims().await?;
                 // Stop payouts when sync fails: stale balance must never authorize new spends.
                 match engine.sync().await {
                     Ok(balances) => {
                         reconcile(&store, engine.as_ref(), config.confirmations).await?;
-                        for balance in balances { store.update_balance(balance).await?; }
+                        for balance in balances {
+                            match store.update_balance(balance).await {
+                                Ok(()) => {},
+                                // Account creation can succeed before a room INSERT fails. Retain its funds in custody.
+                                Err(DomainError::NotFound) => tracing::warn!(code = "unregistered_wallet_account"),
+                                Err(error) => return Err(error),
+                            }
+                        }
                     }
                     Err(_) => {
                         tracing::warn!(code = "wallet_sync_unavailable");

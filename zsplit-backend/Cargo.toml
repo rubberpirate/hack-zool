@@ -9,6 +9,7 @@ rust-version = "1.94"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
+zsplit-api = { path = "apps/api" }
 zsplit-worker = { path = "apps/worker" }
 zsplit-domain = { path = "crates/domain" }
 zsplit-claims = { path = "crates/claims" }
@@ -52,7 +53,7 @@ zcash_proofs = "=0.31.0"
 orchard = "=0.16.0"
 zip32 = "=0.3.0"
 zip321 = "=0.10.0"
-tonic = { version = "0.14", features = ["transport", "tls-webpki-roots"] }
+tonic = { version = "0.14", features = ["transport", "tls-webpki-roots", "tls-ring"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
 rand10 = { package = "rand", version = "0.10" }
 rand_chacha = "0.10"

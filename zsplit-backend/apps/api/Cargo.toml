@@ -33,3 +33,8 @@ sha2.workspace = true
 zeroize.workspace = true
 hmac.workspace = true
 zsplit-worker.workspace = true
+
+[dev-dependencies]
+zcash_address.workspace = true
+zcash_keys.workspace = true
+zcash_protocol.workspace = true
