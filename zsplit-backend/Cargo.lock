@@ -4534,6 +4534,7 @@ dependencies = [
  "zsplit-claims",
  "zsplit-domain",
  "zsplit-store",
+ "zsplit-worker",
  "zsplit-zcash",
 ]
 
@@ -4564,6 +4565,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "serde",
+ "serde_json",
  "thiserror",
  "uuid",
  "zeroize",

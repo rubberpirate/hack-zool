@@ -11,3 +11,6 @@ thiserror.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 zeroize.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

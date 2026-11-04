@@ -1,6 +1,6 @@
 # Shared contracts (integration baseline)
 
-All backend paths are under zsplit-backend/. The lead owns workspace manifests, lockfile, domain and the queue dispatcher. Agents own only their assigned paths; request interface changes explicitly. Use the domain PayoutEngine interface unchanged. No recipient spending keys or personal sweep addresses are accepted. Mainnet is disabled by default.
+All backend paths are under zsplit-backend/. The lead owns workspace manifests, lockfile, domain and the queue dispatcher. The API hosts the apps/worker library with the same wallet Arc; there is no second worker process. Agents own only their assigned paths; request interface changes explicitly. Use the domain PayoutEngine interface unchanged. No recipient spending keys or personal sweep addresses are accepted. Mainnet is disabled by default.
 
 ## Claims public interface
 TokenService::new(key: [u8;32]); issue() -> IssuedToken (token: Zeroizing<String>, digest: [u8;32]); digest(&str) -> Result<[u8;32], DomainError>; verify(&str, &[u8]) -> bool. ReceiverCipher::new(key: [u8;32]); encrypt(claim_id: Uuid, receiver: &str) -> Result<Vec<u8>, DomainError>; decrypt(claim_id: Uuid, ciphertext: &[u8]) -> Result<Zeroizing<String>, DomainError>. validate_receiver(receiver: &str, network: Network) -> Result<(), DomainError>. Token is canonical URL-safe no-padding base64. Domain separation and claim-ID AEAD associated data required. Add can_transition and expiry helpers as needed.

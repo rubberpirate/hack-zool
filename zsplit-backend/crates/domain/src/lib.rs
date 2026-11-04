@@ -39,9 +39,21 @@ impl std::str::FromStr for Network {
         }
     }
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+impl TryFrom<String> for Network {
+    type Error = DomainError;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(transparent)]
 pub struct Zats(u64);
+impl<'de> Deserialize<'de> for Zats {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = u64::deserialize(deserializer)?;
+        Self::new(value).map_err(serde::de::Error::custom)
+    }
+}
 impl Zats {
     pub fn new(v: u64) -> Result<Self, DomainError> {
         if v <= MAX_ZATS {
@@ -197,6 +209,9 @@ mod tests {
     use super::*;
     #[test]
     fn money_is_checked() {
+        assert!(serde_json::from_str::<Zats>("2100000000000001").is_err());
+        assert!(serde_json::from_str::<Zats>("-1").is_err());
+        assert!(serde_json::from_str::<Zats>("0.1").is_err());
         assert!(Zats::new(MAX_ZATS + 1).is_err());
         assert!(
             Zats::new(MAX_ZATS)
