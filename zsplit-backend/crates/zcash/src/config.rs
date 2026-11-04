@@ -26,11 +26,14 @@ impl WalletConfig {
         let uri = endpoint.uri();
         if uri.host().is_none()
             || !matches!(uri.scheme_str(), Some("https" | "http"))
-            || (uri.scheme_str() == Some("http") && !matches!(uri.host(), Some("127.0.0.1" | "localhost" | "[::1]")))
+            || (uri.scheme_str() == Some("http")
+                && !matches!(uri.host(), Some("127.0.0.1" | "localhost" | "[::1]")))
             || uri.authority().is_some_and(|a| a.as_str().contains('@'))
             || uri.query().is_some()
             || uri.path() != "/"
-        { return Err(DomainError::InvalidInput); }
+        {
+            return Err(DomainError::InvalidInput);
+        }
         if self.birthday_height == Some(0)
             || self.sapling_spend_params.is_some() != self.sapling_output_params.is_some()
         {

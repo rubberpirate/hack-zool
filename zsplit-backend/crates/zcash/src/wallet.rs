@@ -38,7 +38,7 @@ use zcash_primitives::transaction::Transaction;
 use zcash_proofs::prover::LocalTxProver;
 use zcash_protocol::{
     ShieldedPool, TxId,
-    consensus::{self, BlockHeight, BranchId},
+    consensus::{self, BlockHeight, BranchId, Parameters},
     value::Zatoshis,
 };
 use zsplit_domain::{
@@ -73,6 +73,32 @@ fn policy(n: u32) -> Result<ConfirmationsPolicy, DomainError> {
     Ok(ConfirmationsPolicy::new_symmetrical(
         NonZeroU32::new(n).ok_or(DomainError::InvalidInput)?,
     ))
+}
+fn active_output_pool(height: BlockHeight) -> ShieldedPool {
+    if consensus::Network::TestNetwork.is_nu_active(consensus::NetworkUpgrade::Nu6_3, height) {
+        ShieldedPool::Ironwood
+    } else {
+        ShieldedPool::Orchard
+    }
+}
+fn validate_chain_info(
+    info: &zcash_client_backend::proto::service::LightdInfo,
+) -> Result<(), DomainError> {
+    if !matches!(info.chain_name.as_str(), "test" | "testnet") {
+        return Err(DomainError::NetworkMismatch);
+    }
+    let height = u32::try_from(info.block_height).map_err(sdk_error)?;
+    let actual = u32::from_str_radix(info.consensus_branch_id.trim_start_matches("0x"), 16)
+        .map_err(|_| DomainError::NetworkMismatch)?;
+    let expected: u32 = BranchId::for_height(
+        &consensus::Network::TestNetwork,
+        BlockHeight::from_u32(height),
+    )
+    .into();
+    if actual != expected {
+        return Err(DomainError::NetworkMismatch);
+    }
+    Ok(())
 }
 fn private_file(path: &Path) -> Result<File, DomainError> {
     let mut options = OpenOptions::new();
@@ -145,7 +171,13 @@ impl NativeWallet {
             .map_err(sdk_error)?
             .connect_timeout(Duration::from_secs(15))
             .timeout(Duration::from_secs(120));
-        let endpoint = if endpoint.uri().scheme_str() == Some("https") { endpoint.tls_config(tonic::transport::ClientTlsConfig::new().with_webpki_roots()).map_err(sdk_error)? } else { endpoint };
+        let endpoint = if endpoint.uri().scheme_str() == Some("https") {
+            endpoint
+                .tls_config(tonic::transport::ClientTlsConfig::new().with_webpki_roots())
+                .map_err(sdk_error)?
+        } else {
+            endpoint
+        };
         let channel = endpoint.connect().await.map_err(sdk_error)?;
         let mut client = CompactTxStreamerClient::new(channel);
         let info = client
@@ -153,9 +185,7 @@ impl NativeWallet {
             .await
             .map_err(sdk_error)?
             .into_inner();
-        if !matches!(info.chain_name.as_str(), "test" | "testnet") {
-            return Err(DomainError::NetworkMismatch);
-        }
+        validate_chain_info(&info)?;
         let (state, lock) = tokio::task::spawn_blocking(move || Self::initialize(config))
             .await
             .map_err(sdk_error)??;
@@ -255,7 +285,12 @@ impl State {
         let spendable = summary
             .account_balances()
             .get(&id)
-            .map(|b| u64::from(b.orchard_balance().spendable_value()))
+            .map(|b| {
+                (b.orchard_balance().spendable_value() + b.ironwood_balance().spendable_value())
+                    .map(u64::from)
+                    .ok_or(DomainError::InvalidInput)
+            })
+            .transpose()?
             .unwrap_or(0);
         Ok(BalanceSnapshot {
             room_id: room,
@@ -356,6 +391,12 @@ impl PayoutEngine for NativeWallet {
         let handle = tokio::runtime::Handle::current();
         self.run(move |s| {
             handle.block_on(async {
+                let info = client
+                    .get_lightd_info(Empty {})
+                    .await
+                    .map_err(sdk_error)?
+                    .into_inner();
+                validate_chain_info(&info)?;
                 zcash_client_backend::sync::run(
                     &mut client,
                     &consensus::Network::TestNetwork,
@@ -531,7 +572,9 @@ impl PayoutEngine for NativeWallet {
                 Zatoshis::from_u64(command.amount.value()).map_err(sdk_error)?,
                 None,
                 None,
-                ShieldedPool::Orchard,
+                active_output_pool(BlockHeight::from_u32(
+                    balance.chain_height.saturating_add(1),
+                )),
                 None,
                 None,
             )
@@ -753,6 +796,31 @@ mod tests {
             load_seed(&config.seed_file).unwrap().expose_secret()
         );
         assert!(NativeWallet::initialize(config).is_err());
+    }
+    #[test]
+    fn current_testnet_uses_ironwood_and_checks_consensus_branch() {
+        let activation = consensus::Network::TestNetwork
+            .activation_height(consensus::NetworkUpgrade::Nu6_3)
+            .unwrap();
+        assert_eq!(active_output_pool(activation - 1), ShieldedPool::Orchard);
+        assert_eq!(active_output_pool(activation), ShieldedPool::Ironwood);
+        let mut info = zcash_client_backend::proto::service::LightdInfo {
+            chain_name: "test".into(),
+            block_height: 4_581_454,
+            consensus_branch_id: "77190ad9".into(),
+            ..Default::default()
+        };
+        assert!(validate_chain_info(&info).is_ok());
+        info.consensus_branch_id = "ffffffff".into();
+        assert!(matches!(
+            validate_chain_info(&info),
+            Err(DomainError::NetworkMismatch)
+        ));
+        info.chain_name = "main".into();
+        assert!(matches!(
+            validate_chain_info(&info),
+            Err(DomainError::NetworkMismatch)
+        ));
     }
     #[test]
     fn rejects_unsafe_seed_permissions_and_unsupported_networks() {
